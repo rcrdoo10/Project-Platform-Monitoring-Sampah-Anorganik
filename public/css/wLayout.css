@@ -1,0 +1,124 @@
+/* Tombol hamburger menu */
+.nav-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 48px;
+    height: 48px;
+    background: white;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+    transition: all 0.25s ease;
+}
+
+.nav-toggle span {
+    display: block;
+    width: 24px;
+    height: 2.5px;
+    background: #2c3e4e;
+    border-radius: 4px;
+    transition: 0.25s;
+}
+
+.nav-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(6px, 6px);
+}
+
+.nav-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Sidebar navigasi */
+.navigation {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 280px;
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+    transition: left 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    z-index: 1000;
+    padding-top: 90px;
+    overflow-y: auto;
+}
+
+.navigation.active {
+    left: 0;
+}
+
+.navigation ul {
+    list-style: none;
+}
+
+.navigation ul li {
+    margin: 8px 16px;
+    border-radius: 20px;
+    transition: 0.2s;
+}
+
+.navigation ul li a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    color: #2d3e50;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    border-radius: 28px;
+    transition: all 0.2s;
+}
+
+.navigation ul li a i {
+    width: 24px;
+    font-size: 1.2rem;
+    color: #5f7f6e;
+}
+
+.navigation ul li:hover {
+    background: #eef2f5;
+}
+
+.navigation ul li.active {
+    background: linear-gradient(95deg, #e0f0e8, #c8e0d6);
+    border-left: 3px solid #2e7d64;
+}
+
+.navigation ul li.active a,
+.navigation ul li.active a i {
+    color: #1b5e4a;
+    font-weight: 600;
+}
+
+/* Overlay */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.25s;
+    z-index: 999;
+    backdrop-filter: blur(2px);
+}
+
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}

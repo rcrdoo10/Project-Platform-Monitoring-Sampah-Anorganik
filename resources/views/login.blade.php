@@ -3,46 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Universitas Sanata Arjuna</title>
-    <link rel="stylesheet" href="css/login.css">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Login - Dompet Sadhar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
 </head>
 <body>
-    <div class="container">
-        <div class="login-box">
-            <div class="header">
-                <h2>UNIVERSITAS SANATI ARJUNA</h2>
-                <p>YOGYAKARTA</p>
+    <div class="login-container">
+        <div class="login-brand">
+            <div>
+                <div class="logo">
+                    <i class="fas fa-recycle"></i>
+                    <span>Dompet Sadhar</span>
+                </div>
+                <div class="brand-title">
+                    Tukar Sampah Plastik<br>Menjadi Poin Berharga
+                </div>
+                <div class="brand-desc">
+                    Platform digital yang membantu Anda mengelola sampah plastik 
+                    dan menukarkannya dengan berbagai reward menarik.
+                </div>
+            </div>
+            <ul class="features">
+                <li><i class="fas fa-check-circle"></i> Kumpulkan poin dari sampah plastik</li>
+                <li><i class="fas fa-check-circle"></i> Tukarkan dengan reward menarik</li>
+                <li><i class="fas fa-check-circle"></i> Pantau statistik dan riwayat transaksi</li>
+                <li><i class="fas fa-check-circle"></i> Dukung lingkungan dengan aksi nyata</li>
+            </ul>
+        </div>
+
+        <div class="login-form">
+            <div class="form-header">
+                <h2>Selamat Datang!</h2>
+                <p>Masuk untuk melanjutkan ke akun Anda</p>
             </div>
 
-            <form id="loginForm">
+            @if(session('error'))
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
+                </div>
+            @endif
+
+            @if(session('success'))
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> {{ session('success') }}
+                </div>
+            @endif
+
+            <form method="POST" action="{{ url('/login') }}">
+                @csrf
                 <div class="input-group">
-                    <input type="text" id="username" placeholder="Username" required>
+                    <label>ID User</label>
+                    <div class="input-icon">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" name="id_user" placeholder="Masukkan ID User" value="{{ old('id_user') }}" required>
+                    </div>
                 </div>
+
                 <div class="input-group">
-                    <input type="password" id="password" placeholder="Password" required>
+                    <label>Password</label>
+                    <div class="password-wrapper">
+                        <i class="fas fa-lock lock-icon"></i>
+                        <input type="password" name="password" id="password" placeholder="Masukkan password" required>
+                        <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+                    </div>
                 </div>
-                <div class="forgot">
-                    <a href="#" id="forgotLink">Forgot Password</a>
-                </div>
-                <button type="submit" class="login-btn">LOGIN</button>
+
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Masuk
+                </button>
             </form>
-
-            <div class="divider">
-                <span>Media Source</span>
-            </div>
-
-            <div class="social">
-                <a href="#" id="fb" class="social-link">Facebook</a>
-                <a href="#" id="ig" class="social-link">Instagram</a>
-                <a href="#" id="yt" class="social-link">YouTube</a>
-            </div>
         </div>
     </div>
 
-    <div id="toast" class="toast hidden"></div>
-
-    <script src="js/login.js"></script>
+    <script src="{{ asset('js/login.js') }}"></script>
 </body>
 </html>
-
-
