@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class akun extends Model
 {
+    
     protected $table = 'akun';
     protected $primaryKey = 'id_user';
-    public $timestamps = false;  
+    public $incrementing = false;
     
     protected $fillable = [
+        'id_user',
         'nama',
         'password',
         'role',
@@ -18,4 +20,10 @@ class akun extends Model
         'poin_digunakan',
         'id_sampah'
     ];
+    
+    // Relasi ke data_sampah
+    public function dataSampah()
+    {
+        return $this->belongsTo(dataSampah::class, 'id_user', 'id_user');
+    }
 }

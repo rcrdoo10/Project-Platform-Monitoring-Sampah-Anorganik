@@ -1,53 +1,26 @@
-let totalPoin = 9999;
+// ============================================
+// wTukarBotol.js - Upload sampah dan update poin ke database
+// ============================================
+
+let currentPoin = window.userData?.poin || 0;
 let selectedImage = null;
+let selectedImageBase64 = null;
 let currentVolumeData = null;
 
-let labels = ["1 Mei", "8 Mei", "15 Mei", "22 Mei", "29 Mei"];
-let poinData = [120, 145, 168, 192, 220];
-let botolData = [100, 118, 134, 155, 170];
-let beratData = [78, 92, 105, 122, 130];
-let allHistoryData = [];
-
-function loadData() {
-    const savedPoin = localStorage.getItem("totalPoin");
-    const savedHistory = localStorage.getItem("allHistoryData");
-    const savedPoinData = localStorage.getItem("poinData");
-    const savedBotolData = localStorage.getItem("botolData");
-    const savedBeratData = localStorage.getItem("beratData");
-    const savedLabels = localStorage.getItem("labels");
-
-    if (savedPoin) totalPoin = parseInt(savedPoin);
-    if (savedHistory) allHistoryData = JSON.parse(savedHistory);
-    if (savedPoinData) poinData = JSON.parse(savedPoinData);
-    if (savedBotolData) botolData = JSON.parse(savedBotolData);
-    if (savedBeratData) beratData = JSON.parse(savedBeratData);
-    if (savedLabels) labels = JSON.parse(savedLabels);
-
-    updatePoinDisplay();
-}
-
-function saveData() {
-    localStorage.setItem("totalPoin", totalPoin);
-    localStorage.setItem("allHistoryData", JSON.stringify(allHistoryData));
-    localStorage.setItem("poinData", JSON.stringify(poinData));
-    localStorage.setItem("botolData", JSON.stringify(botolData));
-    localStorage.setItem("beratData", JSON.stringify(beratData));
-    localStorage.setItem("labels", JSON.stringify(labels));
-}
-
+// Update tampilan poin
 function updatePoinDisplay() {
     const poinDisplay = document.getElementById("poinTotalDisplay");
     if (poinDisplay) {
-        poinDisplay.innerText = totalPoin.toLocaleString("id-ID");
+        poinDisplay.innerText = currentPoin.toLocaleString("id-ID");
     }
 
     const poinLevel = document.getElementById("poinLevel");
     if (poinLevel) {
-        if (totalPoin >= 10000) {
+        if (currentPoin >= 10000) {
             poinLevel.innerText = "Level: 🌟 Eco Master";
-        } else if (totalPoin >= 5000) {
+        } else if (currentPoin >= 5000) {
             poinLevel.innerText = "Level: 🌿 Eco Warrior";
-        } else if (totalPoin >= 2000) {
+        } else if (currentPoin >= 2000) {
             poinLevel.innerText = "Level: 💚 Pejuang Lingkungan";
         } else {
             poinLevel.innerText = "Level: 🌱 Pemula Hijau";
@@ -63,14 +36,25 @@ function showNotification(message, type = "success") {
         <span>${message}</span>
     `;
     document.body.appendChild(notification);
-    
+
     setTimeout(() => {
         notification.style.animation = "slideOutRight 0.3s ease";
         setTimeout(() => notification.remove(), 300);
     }, 4000);
 }
 
-function handleImageUpload(file) {
+// Convert image to base64
+function getBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+// Handle image upload
+async function handleImageUpload(file) {
     if (!file || !file.type.startsWith("image/")) {
         showNotification("Silakan upload file gambar yang valid!", "error");
         return false;
@@ -79,10 +63,12 @@ function handleImageUpload(file) {
         showNotification("Ukuran gambar maksimal 5MB!", "error");
         return false;
     }
-    
+
     selectedImage = file;
+    selectedImageBase64 = await getBase64(file);
+    
     const reader = new FileReader();
-    reader.onload = function (e) {
+    reader.onload = function(e) {
         const preview = document.getElementById("imagePreview");
         if (preview) {
             preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
@@ -92,6 +78,33 @@ function handleImageUpload(file) {
     return true;
 }
 
+// Simpan transaksi ke database (LENGKAP dengan image)
+async function saveTransaction(jumlahBotol, beratBotol, poinDapat) {
+    try {
+        const response = await fetch("/api/save-transaksi", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
+            },
+            body: JSON.stringify({
+                jumlah_botol: jumlahBotol,
+                berat_botol: beratBotol,
+                poin_dapat: poinDapat,
+                status_scan: "success",
+                image: selectedImageBase64
+            }),
+        });
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Error save transaction:", error);
+        return { success: false, message: "Network error" };
+    }
+}
+
+// Update summary
 function updateSummary() {
     const selected = document.querySelector('input[name="volume"]:checked');
     if (selected) {
@@ -111,9 +124,10 @@ function updateSummary() {
     }
 }
 
-function submitUpload(e) {
+// Submit upload
+async function submitUpload(e) {
     e.preventDefault();
-    
+
     if (!selectedImage) {
         showNotification("❌ Silakan upload foto sampah plastik terlebih dahulu!", "error");
         return;
@@ -123,66 +137,83 @@ function submitUpload(e) {
         return;
     }
 
-    const now = new Date();
-    const tanggalString = now.toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-    }) + ", " + now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    const submitBtn = document.querySelector(".submit-upload-btn");
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    submitBtn.disabled = true;
 
-    allHistoryData.unshift({
-        tanggal: tanggalString,
-        botol: `${currentVolumeData.botol} Botol`,
-        berat: `${currentVolumeData.berat.toFixed(2)} kg`,
-        poin: `+${currentVolumeData.poin}`,
-        status: "Berhasil",
-    });
+    try {
+        // Simpan transaksi ke database (data_sampah + akun_sampah + update poin)
+        const result = await saveTransaction(
+            currentVolumeData.botol,
+            currentVolumeData.berat,
+            currentVolumeData.poin
+        );
 
-    totalPoin += currentVolumeData.poin;
-
-    const lastDate = labels[labels.length - 1];
-    const nextWeek = parseInt(lastDate.split(" ")[0]) + 7;
-    labels.push(`${nextWeek} Mei`);
-    poinData.push(poinData[poinData.length - 1] + currentVolumeData.poin);
-    botolData.push(botolData[botolData.length - 1] + currentVolumeData.botol);
-    beratData.push(beratData[beratData.length - 1] + currentVolumeData.berat);
-
-    saveData();
-    updatePoinDisplay();
-
-    selectedImage = null;
-    currentVolumeData = null;
-    document.getElementById("imagePreview").innerHTML = "";
-    document.getElementById("formSummary").style.display = "none";
-    document.querySelectorAll('input[name="volume"]').forEach((radio) => radio.checked = false);
-    document.getElementById("imageUpload").value = "";
-
-    showNotification(`✅ Berhasil! Anda mendapatkan ${currentVolumeData.poin} poin! 🌱`, "success");
+        if (result.success) {
+            currentPoin = result.poin;
+            updatePoinDisplay();
+            
+            showNotification(`✅ Berhasil! Anda mendapatkan ${currentVolumeData.poin} poin! 🌱`, "success");
+            
+            // Refresh dashboard stats
+            await refreshDashboardStats();
+            
+            // Reset form
+            selectedImage = null;
+            selectedImageBase64 = null;
+            currentVolumeData = null;
+            document.getElementById("imagePreview").innerHTML = "";
+            document.getElementById("formSummary").style.display = "none";
+            document.querySelectorAll('input[name="volume"]').forEach(radio => radio.checked = false);
+            document.getElementById("imageUpload").value = "";
+            
+            // Reset upload area
+            const uploadArea = document.getElementById("uploadArea");
+            if (uploadArea) uploadArea.style.display = "block";
+        } else {
+            showNotification("❌ " + (result.message || "Gagal menyimpan transaksi!"), "error");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        showNotification("❌ Terjadi kesalahan, silakan coba lagi!", "error");
+    } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
 }
 
+// Refresh dashboard stats
+async function refreshDashboardStats() {
+    try {
+        const response = await fetch('/api/get-all-stats');
+        const data = await response.json();
+        if (data.success) {
+            localStorage.setItem('dashboardStats', JSON.stringify(data));
+        }
+    } catch (error) {
+        console.error('Error refreshing stats:', error);
+    }
+}
+
+// Toggle navbar
 function toggleNav() {
     const navToggle = document.getElementById("navToggle");
     const navigation = document.getElementById("navigation");
     const overlay = document.getElementById("overlay");
-    
+
     if (navToggle) navToggle.classList.toggle("active");
     if (navigation) navigation.classList.toggle("active");
     if (overlay) overlay.classList.toggle("active");
 }
 
+// Inisialisasi event listeners
 function initEventListeners() {
     const navToggle = document.getElementById("navToggle");
     const overlay = document.getElementById("overlay");
-    
+
     if (navToggle) navToggle.addEventListener("click", toggleNav);
     if (overlay) overlay.addEventListener("click", toggleNav);
-
-    const logoutBtn = document.getElementById("logoutBtn");
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-            showNotification("🚪 Anda telah logout dari Dompet Sadhar. Sampai jumpa kembali! 🌱", "info");
-        });
-    }
 
     const uploadArea = document.getElementById("uploadArea");
     const imageInput = document.getElementById("imageUpload");
@@ -191,40 +222,43 @@ function initEventListeners() {
 
     if (uploadArea && imageInput) {
         uploadArea.addEventListener("click", () => imageInput.click());
-        
+
         uploadArea.addEventListener("dragover", (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = "#1e5a48";
             uploadArea.style.background = "#e8f5f1";
         });
-        
-        uploadArea.addEventListener("dragleave", (e) => {
-            e.preventDefault();
+
+        uploadArea.addEventListener("dragleave", () => {
             uploadArea.style.borderColor = "#2e7d64";
             uploadArea.style.background = "#f0f4f8";
         });
-        
-        uploadArea.addEventListener("drop", (e) => {
+
+        uploadArea.addEventListener("drop", async (e) => {
             e.preventDefault();
             uploadArea.style.borderColor = "#2e7d64";
             uploadArea.style.background = "#f0f4f8";
-            if (e.dataTransfer.files[0]) handleImageUpload(e.dataTransfer.files[0]);
+            if (e.dataTransfer.files[0]) {
+                await handleImageUpload(e.dataTransfer.files[0]);
+            }
         });
     }
 
     if (imageInput) {
-        imageInput.addEventListener("change", (e) => {
-            if (e.target.files[0]) handleImageUpload(e.target.files[0]);
+        imageInput.addEventListener("change", async (e) => {
+            if (e.target.files[0]) {
+                await handleImageUpload(e.target.files[0]);
+            }
         });
     }
 
-    volumeRadios.forEach((radio) => radio.addEventListener("change", updateSummary));
-    
+    volumeRadios.forEach(radio => radio.addEventListener("change", updateSummary));
     if (uploadForm) uploadForm.addEventListener("submit", submitUpload);
 }
 
+// Inisialisasi
 function init() {
-    loadData();
+    updatePoinDisplay();
     initEventListeners();
 }
 

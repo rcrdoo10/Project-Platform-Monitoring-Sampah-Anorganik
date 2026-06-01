@@ -11,7 +11,6 @@ class DataSampah extends Model
     public $timestamps = false;
     
     protected $fillable = [
-        'id_sampah',
         'berat_botol',
         'jumlah_botol',
         'poin_dapat',
@@ -19,4 +18,9 @@ class DataSampah extends Model
         'status_scan',
         'id_user'
     ];
+    
+    public function user()
+    {
+        return $this->belongsTo(akun::class, 'id_user', 'id_user');
+    }
 }

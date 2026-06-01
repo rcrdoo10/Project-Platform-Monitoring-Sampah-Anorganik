@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dompet Sadhar - Dashboard Sampah Plastik</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link rel="stylesheet" href="css/laporan.css">
+    <link rel="stylesheet" href="{{ asset('css/laporan.css') }}">
 </head>
 <body>
 
@@ -30,10 +31,13 @@
     <main class="dashboard-container">
         <div class="header-flex">
             <div class="greeting">
-                <h1>Selamat datang, <span id="userName">Ray Ricardo</span> <i class="fas fa-recycle" style="color:#2e7d64;"></i></h1>
+                <h1>Selamat datang, <span id="userName">{{ $user_nama }}</span> <i class="fas fa-recycle" style="color:#2e7d64;"></i></h1>
                 <p>Terus kelola sampah plastik dan kelola lingkungan</p>
             </div>
-            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            <form action="{{ route('logout') }}" method="POST">
+                @csrf
+                <button type="submit" id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </form>
         </div>
 
         <div class="stats-grid">
@@ -42,16 +46,18 @@
                     <span>Total Botol</span>
                     <i class="fas fa-bottle-water" style="color:#52b788;"></i>
                 </div>
-                <div class="stat-value" id="totalBotolVal">9.999</div>
-                <div class="stat-sub"><i class="fas fa-chart-line"></i> 150 Botol dari minggu lalu <span class="trend-up">+12%</span></div>
+                <!-- LANGSUNG TAMPILKAN DATA REAL DARI DATABASE -->
+                <div class="stat-value" id="totalBotolVal">{{ number_format($totalBotol, 0, ',', '.') }}</div>
+                <div class="stat-sub"><i class="fas fa-chart-line"></i> Total botol yang sudah discan</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <span>Total Berat</span>
                     <i class="fas fa-weight-hanging" style="color:#e9c46a;"></i>
                 </div>
-                <div class="stat-value" id="totalBeratVal">9,999</div>
-                <div class="stat-sub"><i class="fas fa-chart-line"></i> 150 kg dari minggu lalu</div>
+                <!-- LANGSUNG TAMPILKAN DATA REAL DARI DATABASE -->
+                <div class="stat-value" id="totalBeratVal">{{ number_format($totalBerat, 0, ',', '.') }}</div>
+                <div class="stat-sub"><i class="fas fa-chart-line"></i> Total berat yang sudah discan</div>
             </div>
         </div>
 
@@ -73,7 +79,7 @@
                 <span><i class="fas fa-circle" style="color:#e9c46a;"></i> Berat (kg)</span>
             </div>
             <div class="period-label" id="periodLabel">
-                Periode: Mingguan (1-7 Mei, 8-14 Mei, 15-21 Mei, 22-28 Mei 2026)
+                Memuat data...
             </div>
         </div>
 
@@ -84,6 +90,14 @@
     </main>
 </div>
 
-<script src="js/laporan.js"></script>
+<script>
+    // Kirim data dari server ke JavaScript untuk grafik
+    window.initialData = {
+        totalBotol: {{ $totalBotol }},
+        totalBerat: {{ $totalBerat }}
+    };
+</script>
+
+<script src="{{ asset('js/laporan.js') }}"></script>
 </body>
 </html>

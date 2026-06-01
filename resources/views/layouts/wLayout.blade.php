@@ -24,11 +24,11 @@
 <nav class="navigation" id="navigation">
     <ul>
         <li class="{{ $title === 'Dashboard' ? 'active' : '' }}"  >
-            <a href ="/">
+            <a href ="/wDashboard">
             <i class="fas fa-tachometer-alt" ></i>Dashboard</a>
         </li>
         <li class="{{ $title === 'Tukar Botol' ? 'active' : '' }}">
-            <a href ="/TukarBotol">
+            <a href ="/wTukarBotol">
                 <i class="fas fa-check-circle" ></i>Tukar Botol</a>        
         </li>
         <li class="{{ $title === 'Reward' ? 'active' : '' }}" >

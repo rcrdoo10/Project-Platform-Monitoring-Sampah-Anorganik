@@ -21,7 +21,7 @@
 <nav class="navigation" id="navigation">
     <ul>
         <li class="{{ $title === 'Dashboard' ? 'active' : '' }}"  >
-            <a href ="/">
+            <a href ="/kDashboard">
             <i class="fas fa-tachometer-alt" ></i>Dashboard</a>
         </li>
         <li class="{{ $title === 'Verifikasi' ? 'active' : '' }}">

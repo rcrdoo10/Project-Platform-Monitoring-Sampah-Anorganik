@@ -6,21 +6,44 @@
 @endpush
 
 @section('content')
+
+<script>
+    // Data poin dari server (session/database)
+    window.userData = {
+        poin: {{ $user_poin ?? session('user_poin', 0) }},
+        nama: "{{ $user_nama ?? session('user_nama', 'User') }}",
+        id: "{{ session('user_id') }}"
+    };
+</script>
+
 <main class="poin-container">
     <div class="header-flex">
         <div class="greeting">
             <h1><i class="fas fa-check-circle" style="color:#2e7d64;"></i> Poin Saya</h1>
             <p>Upload sampah plastik dan kumpulkan poin</p>
         </div>
-        <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+            <button type="submit" id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </form>
     </div>
 
     <div class="poin-summary">
         <i class="fas fa-star" style="font-size: 3rem; color:#e9c46a;"></i>
-        <div class="total-poin-large" id="poinTotalDisplay">9.999</div>
-        <div class="poin-level" id="poinLevel">Level: Pejuang Lingkungan</div>
+        <div class="total-poin-large" id="poinTotalDisplay">{{ number_format($user_poin ?? session('user_poin', 0), 0, ',', '.') }}</div>
+        <div class="poin-level" id="poinLevel">
+            @php
+                $poin = $user_poin ?? session('user_poin', 0);
+                if ($poin < 2000) $level = "🌱 Pemula Hijau";
+                elseif ($poin < 5000) $level = "💚 Pejuang Lingkungan";
+                elseif ($poin < 10000) $level = "🌿 Eco Warrior";
+                else $level = "🌟 Eco Master";
+            @endphp
+            Level: {{ $level }}
+        </div>
     </div>
 
+    <!-- Sisa konten sama seperti sebelumnya -->
     <div class="upload-section">
         <h3><i class="fas fa-cloud-upload-alt" style="color:#2e7d64;"></i> Upload Sampah Plastik</h3>
         <form id="uploadForm">

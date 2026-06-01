@@ -15,33 +15,42 @@ class loginController extends Controller
 
     public function autentikasi(Request $request)
     {
-        // Validasi
-        $request->validate([
-            'id_user' => 'required',
-            'password' => 'required'
-        ]);
-
-        // Cari user
         $user = akun::where('id_user', $request->id_user)->first();
-
-        // Cek user dan password
-        if ($user && Hash::check($request->password, $user->PASSWORD)) {
-            session([
-                'user_id' => $user->id_user,
-                'user_nama' => $user->nama,
-                'user_role' => $user->ROLE,
-                'user_poin' => $user->total_poin
-            ]);
-
-            return redirect('/')->with('success', 'Login berhasil!');
+        
+        if (!$user) {
+            return back()->with('error', 'User tidak ditemukan!');
         }
-
-        return back()->with('error', 'ID User atau password salah!');
+        
+        if (!Hash::check($request->password, $user->PASSWORD)) {
+            return back()->with('error', 'Password salah!');
+        }
+        
+        // ✅ TAMBAHKAN 'user_poin' KE SESSION
+        session([
+            'user_id' => $user->id_user,
+            'user_nama' => $user->nama,
+            'user_role' => $user->ROLE,
+            'user_poin' => $user->total_poin ?? 0  // ← INI YANG PENTING
+        ]);
+        
+        // Untuk nentuin tampilan
+        switch ($user->ROLE) {
+            case 'warga':
+                return redirect('/wDashboard')->with('success', 'Login berhasil!');
+            case 'kopma':
+                return redirect('/kDashboard')->with('success', 'Login berhasil!');
+            case 'petugas':
+            case 'psl':
+            case 'rektorat':
+                return redirect('/laporan')->with('success', 'Login berhasil!');
+            default:
+                return redirect('/');
+        }
     }
 
     public function logout()
     {
         session()->flush();
-        return redirect('/login')->with('success', 'Logout berhasil!');
+        return redirect('/login');
     }
 }
