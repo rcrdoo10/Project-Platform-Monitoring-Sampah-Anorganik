@@ -1,14 +1,14 @@
-@extends('layouts/kLayout') 
-<!-- Push untuk ngambil -->
+@extends('layouts/kLayout')
+
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/kDashboard.css') }}">
 @endpush
-@section('content')
 
+@section('content')
 <main class="dashboard-container">
     <div class="header-flex">
         <div class="greeting">
-            <h1>Selamat datang, <span id="userName">Admin</span> <i class="fas fa-recycle" style="color:#2e7d64;"></i></h1>
+            <h1>Selamat datang, <span id="userName">{{ $userName }}</span> <i class="fas fa-recycle" style="color:#2e7d64;"></i></h1>
             <p>Kelola dan pantau transaksi penukaran reward</p>
         </div>
         <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -20,8 +20,8 @@
                 <span>Total Reward</span>
                 <i class="fas fa-gift" style="color:#e9c46a;"></i>
             </div>
-            <div class="stat-value" id="totalRewardVal">1.250</div>
-            <div class="stat-sub"><i class="fas fa-chart-line"></i> 120 Reward dari bulan lalu <span class="trend-up">+8%</span></div>
+            <div class="stat-value" id="totalRewardVal">{{ number_format($totalStok, 0, ',', '.') }}</div>
+            <div class="stat-sub"><i class="fas fa-chart-line"></i> Total stok reward tersedia</div>
         </div>
         <div class="stat-card">
             <div class="stat-header">
@@ -106,6 +106,8 @@
     </div>
 </div>
 @endsection
+
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="{{ asset('js/kDashboard.js') }}"></script>
 @endpush

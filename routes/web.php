@@ -2,8 +2,10 @@
 
 use App\Http\Controllers\loginController;
 use App\Http\Controllers\PoinController;
+use App\Http\Controllers\rewardController;
 use App\Models\akun;
 use App\Models\DataSampah;
+use App\Models\Reward;
 
 // ========== ROOT ========== 
 Route::get('/', function () {
@@ -23,16 +25,18 @@ Route::get('/api/get-all-stats', [PoinController::class, 'getAllStats']);
 Route::get('/api/get-history', [PoinController::class, 'getHistory']);
 Route::get('/api/get-all-history', [PoinController::class, 'getAllHistory']);
 Route::get('/api/chart-stats', [PoinController::class, 'getChartStats']);
-// ========== API SAVE TRANSAKSI ==========
 Route::post('/api/save-transaksi', [PoinController::class, 'saveTransaksi']);
 Route::post('/api/update-poin', [PoinController::class, 'updatePoin']);
 Route::get('/api/laporan/stats', [App\Http\Controllers\grafikLaporanController::class, 'getStats']);
 Route::get('/api/laporan/chart', [App\Http\Controllers\grafikLaporanController::class, 'getChartData']);
 
-// Tambahkan di bagian API ROUTE atau setelah route kDashboard
-Route::get('/api/reward/dashboard-data', [App\Http\Controllers\rewardController::class, 'getDashboardData']);
-Route::get('/api/rewards', [App\Http\Controllers\rewardController::class, 'index']);
-Route::get('/api/rewards/available', [App\Http\Controllers\rewardController::class, 'getAvailableRewards']);
+// ========== ROUTE REWARD ==========
+// ========== ROUTE REWARD CRUD ==========
+Route::get('/api/total-stok-reward', [rewardController::class, 'getTotalStok']);
+Route::get('/api/all-rewards', [rewardController::class, 'getAllRewards']);
+Route::post('/api/rewards', [rewardController::class, 'store']);
+Route::put('/api/rewards/{id}', [rewardController::class, 'update']);
+Route::delete('/api/rewards/{id}', [rewardController::class, 'destroy']);
 
 // ========== DASHBOARD WARGA ==========
 Route::get('/wDashboard', function () {
@@ -44,7 +48,6 @@ Route::get('/wDashboard', function () {
     }
     
     $userId = session('user_id');
-    
     $user = akun::where('id_user', $userId)->first();
     
     if (!$user) {
@@ -86,7 +89,6 @@ Route::get('/wTukarBotol', function () {
     $userId = session('user_id');
     $user = akun::where('id_user', $userId)->first();
     
-    // Update session dengan poin terbaru
     if ($user) {
         session(['user_poin' => $user->total_poin ?? 0]);
     }
@@ -120,8 +122,53 @@ Route::get('/kDashboard', function () {
     if (session('user_role') != 'kopma') {
         return redirect('/login');
     }
+    
+    $userId = session('user_id');
+    $user = App\Models\akun::where('id_user', $userId)->first();
+    $totalStok = App\Models\Reward::sum('stok');
+    
     return view('kDashboard', [
-        'title' => 'Dashboard'
+        'title' => 'Dashboard',
+        'totalStok' => $totalStok,
+        'userName' => $user->nama ?? 'Admin'
+    ]);
+});
+
+// ========== VERIFIKASI KOPMA ==========
+Route::get('/kVerifikasi', function () {
+    if (!session()->has('user_id')) {
+        return redirect('/login');
+    }
+    if (session('user_role') != 'kopma') {
+        return redirect('/login');
+    }
+    
+    $userId = session('user_id');
+    $user = App\Models\akun::where('id_user', $userId)->first();
+    
+    return view('kVerifikasi', [
+        'title' => 'Verifikasi',
+        'userName' => $user->nama ?? 'Admin'
+    ]);
+});
+
+// ========== REWARD KOPMA ==========
+Route::get('/kReward', function () {
+    if (!session()->has('user_id')) {
+        return redirect('/login');
+    }
+    if (session('user_role') != 'kopma') {
+        return redirect('/login');
+    }
+    
+    $userId = session('user_id');
+    $user = App\Models\akun::where('id_user', $userId)->first();
+    $rewards = App\Models\Reward::all(); // Ambil semua reward
+    
+    return view('kReward', [
+        'title' => 'Reward',
+        'userName' => $user->nama ?? 'Admin',
+        'rewards' => $rewards
     ]);
 });
 
@@ -135,9 +182,8 @@ Route::get('/laporan', function () {
         return redirect('/login');
     }
     
-    // Untuk role petugas, ambil SEMUA data (tanpa filter id_user)
-    $totalBotol = App\Models\DataSampah::where('status_scan', 'success')->sum('jumlah_botol');
-    $totalBerat = App\Models\DataSampah::where('status_scan', 'success')->sum('berat_botol');
+    $totalBotol = DataSampah::where('status_scan', 'success')->sum('jumlah_botol');
+    $totalBerat = DataSampah::where('status_scan', 'success')->sum('berat_botol');
     
     return view('laporan', [
         'title' => 'Laporan',

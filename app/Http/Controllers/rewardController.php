@@ -4,55 +4,113 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Reward;
-use App\Models\Transaksi; // Sesuaikan dengan model transaksi Anda
 
 class rewardController extends Controller
 {
-    // Method untuk dashboard Kopma
-    public function getDashboardData()
+    // Method untuk mendapatkan total stok reward
+    public function getTotalStok()
     {
-        // Hitung total reward dari database (jumlah reward yang stoknya > 0)
-        $totalReward = Reward::where('stok', '>', 0)->count();
-        
-        // Alternatif: jika ingin total stok semua reward
-        // $totalReward = Reward::sum('stok');
-        
-        // Hitung transaksi pending (sesuaikan dengan tabel transaksi Anda)
-        $pendingCount = Transaksi::where('status', 'pending')->count() ?? 0;
-        
-        // Hitung total transaksi
-        $totalTransaksi = Transaksi::count() ?? 0;
-        
-        // Ambil data reward untuk ditampilkan
-        $rewards = Reward::all();
+        $totalStok = Reward::sum('stok');
         
         return response()->json([
             'success' => true,
-            'totalReward' => $totalReward,
-            'pendingCount' => $pendingCount,
-            'totalTransaksi' => $totalTransaksi,
-            'rewards' => $rewards
+            'total_stok' => $totalStok
         ]);
     }
     
-    // Method untuk mengambil semua reward
-    public function index()
+    // Method untuk mendapatkan semua data reward
+    public function getAllRewards()
     {
         $rewards = Reward::all();
+        
         return response()->json([
             'success' => true,
             'data' => $rewards
         ]);
     }
     
-    // Method untuk mengambil reward yang tersedia (stok > 0)
-    public function getAvailableRewards()
+    // Method untuk menyimpan reward baru
+    public function store(Request $request)
     {
-        $rewards = Reward::where('stok', '>', 0)->get();
+        $request->validate([
+            'nama_reward' => 'required|string|max:255',
+            'jenis_reward' => 'required|string',
+            'stok' => 'required|integer|min:0',
+            'poin_dibutuhkan' => 'required|integer|min:0',
+            'deskripsi' => 'nullable|string',
+            'kategori' => 'required|string'
+        ]);
+        
+        $reward = Reward::create([
+            'nama_reward' => $request->nama_reward,
+            'jenis_reward' => $request->jenis_reward,
+            'stok' => $request->stok,
+            'poin_dibutuhkan' => $request->poin_dibutuhkan,
+            'deskripsi' => $request->deskripsi,
+            'kategori' => $request->kategori
+        ]);
+        
         return response()->json([
             'success' => true,
-            'data' => $rewards,
-            'total' => $rewards->count()
+            'message' => 'Reward berhasil ditambahkan',
+            'data' => $reward
+        ]);
+    }
+    
+    // Method untuk update reward
+    public function update(Request $request, $id)
+    {
+        $reward = Reward::find($id);
+        
+        if (!$reward) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reward tidak ditemukan'
+            ], 404);
+        }
+        
+        $request->validate([
+            'nama_reward' => 'required|string|max:255',
+            'jenis_reward' => 'required|string',
+            'stok' => 'required|integer|min:0',
+            'poin_dibutuhkan' => 'required|integer|min:0',
+            'deskripsi' => 'nullable|string',
+            'kategori' => 'required|string'
+        ]);
+        
+        $reward->update([
+            'nama_reward' => $request->nama_reward,
+            'jenis_reward' => $request->jenis_reward,
+            'stok' => $request->stok,
+            'poin_dibutuhkan' => $request->poin_dibutuhkan,
+            'deskripsi' => $request->deskripsi,
+            'kategori' => $request->kategori
+        ]);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Reward berhasil diupdate',
+            'data' => $reward
+        ]);
+    }
+    
+    // Method untuk hapus reward
+    public function destroy($id)
+    {
+        $reward = Reward::find($id);
+        
+        if (!$reward) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Reward tidak ditemukan'
+            ], 404);
+        }
+        
+        $reward->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Reward berhasil dihapus'
         ]);
     }
 }
