@@ -1,194 +1,57 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\loginController;
-use App\Http\Controllers\PoinController;
+use App\Http\Controllers\dashboardController;
 use App\Http\Controllers\rewardController;
-use App\Models\akun;
-use App\Models\DataSampah;
-use App\Models\Reward;
+use App\Http\Controllers\poinController;
+use App\Http\Controllers\transaksiController;
+use App\Http\Controllers\grafikLaporanController;
 
-// ========== ROOT ========== 
-Route::get('/', function () {
-    return redirect('/login');
-});
-
-// ========== LOGIN ==========
 Route::get('/login', [loginController::class, 'index'])->name('login');
 Route::post('/login', [loginController::class, 'autentikasi']);
 Route::post('/logout', [loginController::class, 'logout'])->name('logout');
 
-// ========== API ROUTE ==========
-Route::get('/api/get-poin', [PoinController::class, 'getPoin']);
-Route::get('/api/get-total-botol', [PoinController::class, 'getTotalBotol']);
-Route::get('/api/get-total-berat', [PoinController::class, 'getTotalBerat']);
-Route::get('/api/get-all-stats', [PoinController::class, 'getAllStats']);
-Route::get('/api/get-history', [PoinController::class, 'getHistory']);
-Route::get('/api/get-all-history', [PoinController::class, 'getAllHistory']);
-Route::get('/api/chart-stats', [PoinController::class, 'getChartStats']);
-Route::post('/api/save-transaksi', [PoinController::class, 'saveTransaksi']);
-Route::post('/api/update-poin', [PoinController::class, 'updatePoin']);
-Route::get('/api/laporan/stats', [App\Http\Controllers\grafikLaporanController::class, 'getStats']);
-Route::get('/api/laporan/chart', [App\Http\Controllers\grafikLaporanController::class, 'getChartData']);
-
-// ========== ROUTE REWARD ==========
-// ========== ROUTE REWARD CRUD ==========
-Route::get('/api/total-stok-reward', [rewardController::class, 'getTotalStok']);
-Route::get('/api/all-rewards', [rewardController::class, 'getAllRewards']);
-Route::post('/api/rewards', [rewardController::class, 'store']);
-Route::put('/api/rewards/{id}', [rewardController::class, 'update']);
-Route::delete('/api/rewards/{id}', [rewardController::class, 'destroy']);
-
-// ========== DASHBOARD WARGA ==========
-Route::get('/wDashboard', function () {
-    if (!session()->has('user_id')) {
+Route::get('/', function () {
+    if (session('user_id')) {
+        $role = session('user_role');
+        if ($role == 'warga') return redirect('/wDashboard');
+        if ($role == 'kopma') return redirect('/kDashboard');
+        if ($role == 'petugas' || $role == 'psl' || $role == 'rektorat') return redirect('/laporan');
         return redirect('/login');
     }
-    if (session('user_role') != 'warga') {
-        return redirect('/login');
-    }
-    
-    $userId = session('user_id');
-    $user = akun::where('id_user', $userId)->first();
-    
-    if (!$user) {
-        session()->flush();
-        return redirect('/login');
-    }
-    
-    $totalBotol = DataSampah::where('id_user', $userId)
-        ->where('status_scan', 'success')
-        ->sum('jumlah_botol');
-    
-    $totalBerat = DataSampah::where('id_user', $userId)
-        ->where('status_scan', 'success')
-        ->sum('berat_botol');
-    
-    session([
-        'user_poin' => $user->total_poin ?? 0,
-        'user_nama' => $user->nama,
-    ]);
-    
-    return view('wDashboard', [
-        'title' => 'Dashboard',
-        'user_nama' => $user->nama ?? 'User',
-        'user_poin' => $user->total_poin ?? 0,
-        'totalBotol' => $totalBotol ?? 0,
-        'totalBerat' => $totalBerat ?? 0
-    ]);
+    return redirect('/login');
 });
 
-// ========== TUKAR BOTOL ==========
-Route::get('/wTukarBotol', function () {
-    if (!session()->has('user_id')) {
-        return redirect('/login');
-    }
-    if (session('user_role') != 'warga') {
-        return redirect('/login');
-    }
-    
-    $userId = session('user_id');
-    $user = akun::where('id_user', $userId)->first();
-    
-    if ($user) {
-        session(['user_poin' => $user->total_poin ?? 0]);
-    }
-    
-    return view('wTukarBotol', [
-        'title' => 'Tukar Botol',
-        'user_poin' => session('user_poin', 0),
-        'user_nama' => session('user_nama', 'User')
-    ]);
-});
+Route::get('/wDashboard', [dashboardController::class, 'warga'])->name('wDashboard');
+Route::get('/wTukarBotol', [dashboardController::class, 'wTukarBotol'])->name('wTukarBotol');
+Route::get('/wReward', [dashboardController::class, 'wReward'])->name('wReward');
+Route::get('/kDashboard', [dashboardController::class, 'kopma'])->name('kDashboard');
+Route::get('/kVerifikasi', [dashboardController::class, 'verifikasi'])->name('kVerifikasi');
+Route::get('/kReward', [rewardController::class, 'index'])->name('kReward');
+Route::get('/laporan', [dashboardController::class, 'laporan'])->name('laporan');
 
-// ========== REWARD ==========
-Route::get('/Reward', function () {
-    if (!session()->has('user_id')) {
-        return redirect('/login');
-    }
-    if (session('user_role') != 'warga') {
-        return redirect('/login');
-    }
-    
-    return view('wReward', [
-        'title' => 'Reward'
-    ]);
-});
-
-// ========== DASHBOARD KOPMA ==========
-Route::get('/kDashboard', function () {
-    if (!session()->has('user_id')) {
-        return redirect('/login');
-    }
-    if (session('user_role') != 'kopma') {
-        return redirect('/login');
-    }
-    
-    $userId = session('user_id');
-    $user = App\Models\akun::where('id_user', $userId)->first();
-    $totalStok = App\Models\Reward::sum('stok');
-    
-    return view('kDashboard', [
-        'title' => 'Dashboard',
-        'totalStok' => $totalStok,
-        'userName' => $user->nama ?? 'Admin'
-    ]);
-});
-
-// ========== VERIFIKASI KOPMA ==========
-Route::get('/kVerifikasi', function () {
-    if (!session()->has('user_id')) {
-        return redirect('/login');
-    }
-    if (session('user_role') != 'kopma') {
-        return redirect('/login');
-    }
-    
-    $userId = session('user_id');
-    $user = App\Models\akun::where('id_user', $userId)->first();
-    
-    return view('kVerifikasi', [
-        'title' => 'Verifikasi',
-        'userName' => $user->nama ?? 'Admin'
-    ]);
-});
-
-// ========== REWARD KOPMA ==========
-Route::get('/kReward', function () {
-    if (!session()->has('user_id')) {
-        return redirect('/login');
-    }
-    if (session('user_role') != 'kopma') {
-        return redirect('/login');
-    }
-    
-    $userId = session('user_id');
-    $user = App\Models\akun::where('id_user', $userId)->first();
-    $rewards = App\Models\Reward::all(); // Ambil semua reward
-    
-    return view('kReward', [
-        'title' => 'Reward',
-        'userName' => $user->nama ?? 'Admin',
-        'rewards' => $rewards
-    ]);
-});
-
-// ========== LAPORAN ==========
-Route::get('/laporan', function () {
-    if (!session()->has('user_id')) {
-        return redirect('/login');
-    }
-    $allowedRoles = ['petugas', 'psl', 'rektorat'];
-    if (!in_array(session('user_role'), $allowedRoles)) {
-        return redirect('/login');
-    }
-    
-    $totalBotol = DataSampah::where('status_scan', 'success')->sum('jumlah_botol');
-    $totalBerat = DataSampah::where('status_scan', 'success')->sum('berat_botol');
-    
-    return view('laporan', [
-        'title' => 'Laporan',
-        'totalBotol' => $totalBotol ?? 0,
-        'totalBerat' => $totalBerat ?? 0,
-        'user_nama' => session('user_nama', 'Petugas')
-    ]);
+Route::prefix('api')->group(function () {
+    Route::get('/poin', [poinController::class, 'getPoin']);
+    Route::get('/stats', [poinController::class, 'getAllStats']);
+    Route::get('/history', [poinController::class, 'getHistory']);
+    Route::post('/transaksi', [poinController::class, 'saveTransaksi']);
+    Route::get('/history/all', [poinController::class, 'getAllHistory']);
+    Route::get('/history/reward/all', [poinController::class, 'getAllHistoryReward']);
+    Route::get('/chart', [grafikLaporanController::class, 'getChartData']);
+    Route::get('/laporan/chart', [grafikLaporanController::class, 'getChartData']);
+    Route::get('/laporan/stats', [grafikLaporanController::class, 'getStats']);
+    Route::get('/warga/chart-stats', [poinController::class, 'getChartStats']);
+    Route::get('/reward/all', [rewardController::class, 'getAllRewards']);
+    Route::get('/reward/stok', [rewardController::class, 'getTotalStok']);
+    Route::post('/exchange-reward', [rewardController::class, 'exchangeReward']);
+    Route::get('/user/exchange-history', [rewardController::class, 'getUserExchangeHistory']);
+    Route::post('/rewards', [rewardController::class, 'store']);
+    Route::put('/rewards/{id}', [rewardController::class, 'update']);
+    Route::delete('/rewards/{id}', [rewardController::class, 'destroy']);
+    Route::get('/transaksi/pending', [transaksiController::class, 'getPending']);
+    Route::get('/transaksi/approved', [transaksiController::class, 'getApproved']);
+    Route::get('/transaksi/all', [transaksiController::class, 'getAll']);
+    Route::post('/transaksi/approve/{id}', [transaksiController::class, 'approve']);
+    Route::put('/transaksi/{id}/approve', [transaksiController::class, 'approve']);
 });

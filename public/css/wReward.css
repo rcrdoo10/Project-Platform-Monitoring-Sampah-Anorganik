@@ -10,6 +10,7 @@ body {
     min-height: 100vh;
 }
 
+/* Navigation Styles */
 .navigation ul {
     list-style: none;
 }
@@ -74,6 +75,7 @@ body {
     visibility: visible;
 }
 
+/* Reward Container */
 .reward-container {
     max-width: 1400px;
     margin: 0 auto;
@@ -140,7 +142,7 @@ body {
 
 .poin-level {
     display: inline-block;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     padding: 6px 16px;
     border-radius: 40px;
     font-size: 0.85rem;
@@ -176,11 +178,18 @@ body {
     border-color: #2e7d64;
 }
 
+/* Reward List */
 .reward-list {
     background: #ffffff;
     border-radius: 32px;
     padding: 20px 24px;
     margin-bottom: 32px;
+}
+
+.reward-list h3 {
+    margin-bottom: 20px;
+    font-size: 1.25rem;
+    color: #1e2f3a;
 }
 
 .reward-item {
@@ -217,18 +226,23 @@ body {
 .reward-icon.food {
     background: #e8f5e9;
 }
+
 .reward-icon.food i {
     color: #4caf50;
 }
+
 .reward-icon.drink {
     background: #e3f2fd;
 }
+
 .reward-icon.drink i {
     color: #2196f3;
 }
+
 .reward-icon.goods {
     background: #fff3e0;
 }
+
 .reward-icon.goods i {
     color: #ff9800;
 }
@@ -248,32 +262,47 @@ body {
     color: #5f7c8b;
 }
 
+/* ========== STOK STYLES ========== */
+/* Stok Normal (>5) - Hijau */
 .reward-stock {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #e8f5f1;
+    background: #e8f5e9;
     padding: 6px 14px;
     border-radius: 40px;
     font-size: 0.8rem;
 }
 
 .reward-stock i {
-    color: #2e7d64;
+    color: #4caf50;
 }
 
 .reward-stock span {
     font-weight: 600;
-    color: #2e7d64;
+    color: #4caf50;
 }
 
+/* Stok Menipis (1-5) - KUNING/ORANYE */
 .reward-stock.low-stock {
-    background: #ffe9e5;
+    background: #fff3e0;
+    border: 1px solid #ff9800;
 }
 
-.reward-stock.low-stock i, 
+.reward-stock.low-stock i,
 .reward-stock.low-stock span {
-    color: #b6695a;
+    color: #ff9800;
+}
+
+/* Stok Habis (0) - MERAH */
+.reward-stock.out-of-stock {
+    background: #ffe9e5;
+    border: 1px solid #e74c3c;
+}
+
+.reward-stock.out-of-stock i,
+.reward-stock.out-of-stock span {
+    color: #e74c3c;
 }
 
 .reward-price {
@@ -315,7 +344,7 @@ body {
     font-size: 1.1rem;
     color: #2e7d64;
     transition: 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .quantity-selector button:hover {
@@ -370,7 +399,7 @@ body {
     cursor: not-allowed;
 }
 
-/* Riwayat Penukaran */
+/* ========== RIWAYAT PENUKARAN ========== */
 .history-exchange-section {
     background: #ffffff;
     border-radius: 32px;
@@ -418,6 +447,7 @@ body {
     border-color: #2e7d64;
 }
 
+/* Tabel */
 .table-responsive {
     overflow-x: auto;
 }
@@ -429,20 +459,23 @@ table {
 }
 
 th {
-    text-align: left;
-    padding: 14px 10px 12px 0;
+    text-align: center;
+    padding: 14px 16px;
     color: #5f7c8b;
     font-weight: 600;
-    border-bottom: 1px solid #e9edf2;
+    border-bottom: 2px solid #e9edf2;
+    background-color: #f8fafc;
 }
 
 td {
-    padding: 14px 10px 14px 0;
+    text-align: center;
+    padding: 14px 16px;
     border-bottom: 1px solid #e9edf2;
     vertical-align: middle;
     color: #1e2f3a;
 }
 
+/* Status Badge */
 .status-badge-pending {
     background: #ffe9e5;
     color: #b6695a;
@@ -451,6 +484,7 @@ td {
     font-size: 0.7rem;
     font-weight: 600;
     display: inline-block;
+    white-space: nowrap;
 }
 
 .status-badge-approved {
@@ -461,18 +495,7 @@ td {
     font-size: 0.7rem;
     font-weight: 600;
     display: inline-block;
-}
-
-.detail-link {
-    color: #3c9e7a;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.75rem;
-    cursor: pointer;
-}
-
-.detail-link:hover {
-    text-decoration: underline;
+    white-space: nowrap;
 }
 
 /* Modal Konfirmasi */
@@ -538,7 +561,8 @@ td {
     margin-top: 24px;
 }
 
-.btn-cancel, .btn-confirm {
+.btn-cancel,
+.btn-confirm {
     padding: 10px 24px;
     border-radius: 40px;
     border: none;
@@ -565,7 +589,53 @@ td {
     background: #1e5a48;
 }
 
-/* footer motivasi */
+/* Modal Riwayat Lengkap */
+#fullHistoryModal .modal-content {
+    max-width: 900px;
+    width: 90%;
+    margin: 50px auto;
+}
+
+#fullHistoryModal .modal-body {
+    padding: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#fullHistoryModal table {
+    font-size: 0.85rem;
+}
+
+#fullHistoryModal th {
+    background: #f8fafc;
+    padding: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#fullHistoryModal td {
+    padding: 10px 12px;
+}
+
+/* Tombol Lihat Semua */
+.lihat-semua-btn {
+    background: #2e7d64;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.lihat-semua-btn:hover {
+    background: #1e5a48;
+    transform: scale(0.98);
+}
+
+/* Footer Motivasi */
 .motivation-footer {
     background: linear-gradient(105deg, #eef5f2, #e2ede7);
     border-radius: 30px;
@@ -589,6 +659,7 @@ td {
     margin-right: 8px;
 }
 
+/* Notifikasi */
 .notification {
     position: fixed;
     top: 20px;
@@ -619,6 +690,27 @@ td {
     color: white;
 }
 
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f0f4f8;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2e7d64;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #1b5e4a;
+}
+
+/* Animations */
 @keyframes slideInRight {
     from {
         transform: translateX(100%);
@@ -652,16 +744,63 @@ td {
     }
 }
 
-@media (max-width: 780px) {
+/* Responsive */
+@media (max-width: 768px) {
     .reward-container {
         padding: 18px 16px 32px;
     }
+
+    .total-poin-large {
+        font-size: 2.5rem;
+    }
+
     .exchange-control {
         width: 100%;
         justify-content: space-between;
         margin-top: 8px;
     }
+
     .reward-info {
         flex: 1;
+    }
+
+    .history-exchange-section {
+        padding: 16px;
+    }
+
+    th,
+    td {
+        padding: 10px 8px;
+        font-size: 0.75rem;
+    }
+
+    #fullHistoryModal .modal-content {
+        width: 95%;
+        margin: 20px auto;
+    }
+
+    .reward-stock {
+        padding: 4px 10px;
+        font-size: 0.7rem;
+    }
+
+    .reward-price {
+        font-size: 0.85rem;
+        min-width: 80px;
+    }
+
+    .quantity-selector {
+        padding: 2px 8px;
+    }
+
+    .quantity-selector button {
+        width: 25px;
+        height: 25px;
+        font-size: 0.9rem;
+    }
+
+    .exchange-btn {
+        padding: 6px 16px;
+        font-size: 0.8rem;
     }
 }

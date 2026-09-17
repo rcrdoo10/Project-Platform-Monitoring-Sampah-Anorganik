@@ -1,29 +1,32 @@
-@extends('layouts/kLayout') 
-<!-- Push untuk ngambil -->
+@extends('layouts/kLayout')
+
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/kReward.css') }}">
 @endpush
-@section('content')
 
+@section('content')
 <main class="reward-container">
     <div class="header-flex">
         <div class="greeting">
             <h1><i class="fas fa-gift" style="color:#2e7d64;"></i> Kelola Reward</h1>
             <p>Kelola daftar reward, kategori, harga (poin), dan stok reward</p>
         </div>
-        <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+            @csrf
+            <button type="submit" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </form>
     </div>
 
     <div class="filter-category">
         <button class="category-btn active" data-category="all">📦 Semua</button>
-        <button class="category-btn" data-category="food">🍔 Makanan</button>
-        <button class="category-btn" data-category="drink">🥤 Minuman</button>
-        <button class="category-btn" data-category="goods">🎁 Barang</button>
+        <button class="category-btn" data-category="makanan">🍔 Makanan</button>
+        <button class="category-btn" data-category="minuman">🥤 Minuman</button>
+        <button class="category-btn" data-category="barang">🎁 Barang</button>
     </div>
 
     <div class="reward-header">
         <h3><i class="fas fa-tags" style="color:#2e7d64;"></i> Daftar Reward</h3>
-        <button id="addRewardBtn" class="add-reward-btn">
+        <button id="addRewardBtn" class="add-reward-btn" type="button">
             <i class="fas fa-plus"></i> Tambah Reward
         </button>
     </div>
@@ -56,16 +59,23 @@
                     <input type="text" id="editRewardDesc" placeholder="Deskripsi reward">
                 </div>
                 <div class="form-group">
-                    <label>Kategori</label>
+                    <label>Jenis Reward</label>
                     <select id="editRewardCategory">
-                        <option value="food">🍔 Makanan</option>
-                        <option value="drink">🥤 Minuman</option>
-                        <option value="goods">🎁 Barang</option>
+                        <option value="Makanan">🍔 Makanan</option>
+                        <option value="Minuman">🥤 Minuman</option>
+                        <option value="Barang">🎁 Barang</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Satuan</label>
+                    <select id="editRewardSatuan">
+                        <option value="pcs">PCS (Per Potong)</option>
+                        <option value="lusin">Lusin (12 pcs)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Harga (Poin yang dibutuhkan)</label>
-                    <input type="number" id="editRewardPoints" min="0" step="100" required>
+                    <input type="number" id="editRewardPoints" min="0" required>
                 </div>
                 <div class="form-group">
                     <label>Jumlah Stok Reward</label>
@@ -97,16 +107,23 @@
                     <input type="text" id="addRewardDesc" placeholder="Deskripsi reward">
                 </div>
                 <div class="form-group">
-                    <label>Kategori</label>
+                    <label>Jenis Reward</label>
                     <select id="addRewardCategory">
-                        <option value="food">🍔 Makanan</option>
-                        <option value="drink">🥤 Minuman</option>
-                        <option value="goods">🎁 Barang</option>
+                        <option value="Makanan">🍔 Makanan</option>
+                        <option value="Minuman">🥤 Minuman</option>
+                        <option value="Barang">🎁 Barang</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Satuan</label>
+                    <select id="addRewardSatuan">
+                        <option value="pcs">PCS (Per Potong)</option>
+                        <option value="lusin">Lusin (12 pcs)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Harga (Poin yang dibutuhkan)</label>
-                    <input type="number" id="addRewardPoints" min="0" step="100" value="500" required>
+                    <input type="number" id="addRewardPoints" min="0" value="500" required>
                 </div>
                 <div class="form-group">
                     <label>Jumlah Stok Reward</label>
@@ -121,6 +138,7 @@
     </div>
 </div>
 @endsection
+
 @push('scripts')
-    <script src="{{ asset('js/kReward.js') }}"></script>
+<script src="{{ asset('js/kReward.js') }}"></script>
 @endpush

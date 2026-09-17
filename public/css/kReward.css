@@ -1,78 +1,3 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-}
-
-body {
-    background: #f0f4f8;
-    min-height: 100vh;
-}
-
-.navigation ul {
-    list-style: none;
-}
-
-.navigation ul li {
-    margin: 8px 16px;
-    border-radius: 20px;
-    transition: 0.2s;
-}
-
-.navigation ul li a {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 12px 20px;
-    color: #1e2f3a;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 1rem;
-    border-radius: 28px;
-    transition: all 0.2s;
-}
-
-.navigation ul li a i {
-    width: 24px;
-    font-size: 1.2rem;
-    color: #5f7c8b;
-}
-
-.navigation ul li:hover {
-    background: #e9edf2;
-}
-
-.navigation ul li.active {
-    background: linear-gradient(95deg, #e0f0e8, #c8e0d6);
-    border-left: 3px solid #2e7d64;
-}
-
-.navigation ul li.active a,
-.navigation ul li.active a i {
-    color: #2e7d64;
-    font-weight: 600;
-}
-
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    opacity: 0;
-    visibility: hidden;
-    transition: 0.25s;
-    z-index: 999;
-    backdrop-filter: blur(2px);
-}
-
-.overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
 .reward-container {
     max-width: 1400px;
     margin: 0 auto;
@@ -178,15 +103,15 @@ body {
 }
 
 .reward-list {
-    background: #ffffff;
+    background: white;
     border-radius: 32px;
     padding: 20px 24px;
 }
 
 .reward-item {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     padding: 16px;
     border-bottom: 1px solid #e9edf2;
     flex-wrap: wrap;
@@ -202,11 +127,13 @@ body {
     align-items: center;
     gap: 16px;
     flex: 2;
+    min-width: 200px;
 }
 
+/* ========== ICON STYLES ========== */
 .reward-icon {
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
     border-radius: 20px;
     display: flex;
     align-items: center;
@@ -216,29 +143,35 @@ body {
 .reward-icon.food {
     background: #e8f5e9;
 }
+
 .reward-icon.food i {
     color: #4caf50;
+    font-size: 1.6rem;
 }
+
 .reward-icon.drink {
     background: #e3f2fd;
 }
+
 .reward-icon.drink i {
     color: #2196f3;
+    font-size: 1.6rem;
 }
+
 .reward-icon.goods {
     background: #fff3e0;
 }
+
 .reward-icon.goods i {
     color: #ff9800;
+    font-size: 1.6rem;
 }
-
-.reward-icon i {
-    font-size: 1.5rem;
-}
+/* ========== END ICON STYLES ========== */
 
 .reward-details h4 {
     color: #1e2f3a;
     margin-bottom: 4px;
+    font-size: 1rem;
 }
 
 .reward-details p {
@@ -257,21 +190,58 @@ body {
     font-weight: 700;
     color: #e9c46a;
     font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.reward-stock {
-    font-weight: 600;
-    color: #52b788;
-    font-size: 0.9rem;
-}
-
-.reward-stock i {
+.reward-points i {
     margin-right: 4px;
 }
 
-.reward-stock.low-stock {
-    color: #b6695a;
+/* ========== STOK STYLES ========== */
+
+/* Stok Normal (>5) - Hijau */
+.reward-stock {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: #e8f5e9;
+    padding: 4px 12px;
+    border-radius: 40px;
+    transition: all 0.2s;
 }
+
+.reward-stock i {
+    color: #4caf50;
+}
+
+.reward-stock span {
+    color: #4caf50;
+}
+
+/* Stok Menipis (1-5) - KUNING/ORANYE */
+.reward-stock.low-stock {
+    background: #fff3e0;
+}
+
+.reward-stock.low-stock i,
+.reward-stock.low-stock span {
+    color: #ff9800;
+}
+
+/* Stok Habis (0) - MERAH */
+.reward-stock.out-of-stock {
+    background: #ffe9e5;
+}
+
+.reward-stock.out-of-stock i,
+.reward-stock.out-of-stock span {
+    color: #e74c3c;
+}
+/* ========== END STOK STYLES ========== */
 
 .reward-actions {
     display: flex;
@@ -279,11 +249,14 @@ body {
     align-items: center;
 }
 
-.edit-reward-btn, .delete-reward-btn {
+.edit-btn, .delete-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     background: #3c9e7a;
     color: white;
     border: none;
-    padding: 8px 16px;
+    padding: 6px 16px;
     border-radius: 40px;
     cursor: pointer;
     font-weight: 500;
@@ -291,20 +264,21 @@ body {
     transition: 0.2s;
 }
 
-.edit-reward-btn:hover {
+.edit-btn:hover {
     background: #2e7d64;
-    transform: scale(0.98);
+    transform: translateY(-2px);
 }
 
-.delete-reward-btn {
+.delete-btn {
     background: #b6695a;
 }
 
-.delete-reward-btn:hover {
+.delete-btn:hover {
     background: #a0523a;
-    transform: scale(0.98);
+    transform: translateY(-2px);
 }
 
+/* ========== MODAL STYLES ========== */
 .modal {
     display: none;
     position: fixed;
@@ -320,7 +294,7 @@ body {
 
 .modal-content {
     background: white;
-    max-width: 450px;
+    max-width: 500px;
     margin: 50px auto;
     border-radius: 32px;
     animation: modalSlideIn 0.3s ease;
@@ -398,18 +372,15 @@ body {
     margin-top: 24px;
 }
 
-.btn-cancel, .btn-save {
-    padding: 10px 24px;
-    border-radius: 40px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
 .btn-cancel {
     background: #f0f4f8;
     color: #5a6e7c;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
 .btn-cancel:hover {
@@ -419,12 +390,19 @@ body {
 .btn-save {
     background: #2e7d64;
     color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
 .btn-save:hover {
     background: #1e5a48;
 }
 
+/* ========== FOOTER ========== */
 .motivation-footer {
     background: linear-gradient(105deg, #eef5f2, #e2ede7);
     border-radius: 30px;
@@ -448,36 +426,7 @@ body {
     margin-right: 8px;
 }
 
-.notification {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 16px 24px;
-    border-radius: 16px;
-    z-index: 2001;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    animation: slideInRight 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 500;
-}
-
-.notification-success {
-    background: #2b7a5c;
-    color: white;
-}
-
-.notification-info {
-    background: #3c9e7a;
-    color: white;
-}
-
-.notification-error {
-    background: #b6695a;
-    color: white;
-}
-
+/* ========== ANIMATIONS ========== */
 @keyframes slideInRight {
     from {
         transform: translateX(100%);
@@ -500,22 +449,58 @@ body {
     }
 }
 
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #5f7c8b;
+}
+
+/* ========== RESPONSIVE ========== */
 @media (max-width: 780px) {
     .reward-container {
         padding: 18px 16px 32px;
     }
-    .filter-category {
-        justify-content: center;
+    .reward-item {
+        flex-direction: column;
+        align-items: flex-start;
     }
     .reward-stats {
         width: 100%;
         justify-content: space-between;
-        margin-top: 8px;
-        margin-left: 66px;
     }
     .reward-actions {
         width: 100%;
         justify-content: flex-end;
         margin-top: 8px;
+    }
+    .modal-content {
+        margin: 20px;
+        width: auto;
+    }
+    .reward-icon {
+        width: 45px;
+        height: 45px;
+    }
+    .reward-icon i {
+        font-size: 1.3rem;
+    }
+}
+
+/* Animasi untuk modal fade in/out */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
     }
 }

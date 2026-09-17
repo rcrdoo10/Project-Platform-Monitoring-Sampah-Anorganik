@@ -86,7 +86,6 @@
                         <th>Berat</th>
                         <th>Poin</th>
                         <th>Status</th>
-                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="historyBody"></tbody>
@@ -117,7 +116,6 @@
                             <th>Berat</th>
                             <th>Poin</th>
                             <th>Status</th>
-                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody id="fullHistoryBody"></tbody>

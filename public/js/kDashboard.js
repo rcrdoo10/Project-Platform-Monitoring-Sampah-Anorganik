@@ -1,176 +1,89 @@
-// ========== VARIABEL GLOBAL ==========
-let pendingCount = 3;
-let totalTransaksi = 2847;
-let allHistoryData = [];
-let mainChart;
+console.log("kDashboard.js loaded");
 
-// Data statis untuk grafik
-const penukaranPerHari = [
-    12, 8, 15, 10, 7, 14, 18, 22, 19, 25, 30, 28, 35, 32, 40, 38, 45, 42, 50,
-    48, 55, 52, 60, 58, 65, 62, 70, 68, 75, 72,
-];
+let chartLabels = window.chartLabels || [];
+let chartData = window.chartData || [];
+let recentTransactions = window.recentTransactions || [];
+let allTransactions = window.allTransactions || [];
+let currentPeriod = window.currentPeriod || "daily";
 
-const labels = [];
-for (let i = 1; i <= 30; i++) {
-    labels.push(`${i} Mei`);
+let chartInstance = null;
+
+function escapeHtml(text) {
+    if (!text) return "";
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
 }
 
-// ========== AMBIL RIWAYAT DARI DATABASE ==========
-function fetchHistoryData() {
-    fetch("/api/get-all-history")
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.success && data.data) {
-                allHistoryData = data.data.map((item) => ({
-                    tanggal:
-                        item.tanggal ||
-                        item.created_at ||
-                        new Date().toLocaleString(),
-                    reward: item.nama_reward || item.reward || "-",
-                    poin: item.poin_digunakan || item.poin || 0,
-                    status: item.status || "Disetujui",
-                }));
-            } else {
-                // Data statis sebagai fallback
-                allHistoryData = [
-                    {
-                        tanggal: "30 Mei 2026, 18:30",
-                        reward: "Paket Nasi Box",
-                        poin: 500,
-                        status: "Disetujui",
-                    },
-                    {
-                        tanggal: "29 Mei 2026, 14:20",
-                        reward: "Jus Buah Segar",
-                        poin: 300,
-                        status: "Disetujui",
-                    },
-                    {
-                        tanggal: "28 Mei 2026, 09:45",
-                        reward: "Eco Bag",
-                        poin: 200,
-                        status: "Disetujui",
-                    },
-                    {
-                        tanggal: "27 Mei 2026, 16:30",
-                        reward: "Kopi Spesial",
-                        poin: 250,
-                        status: "Disetujui",
-                    },
-                    {
-                        tanggal: "26 Mei 2026, 11:15",
-                        reward: "Tumbler",
-                        poin: 800,
-                        status: "Disetujui",
-                    },
-                ];
-            }
-            renderHistoryTable();
-        })
-        .catch((error) => {
-            console.error("Error fetching history:", error);
-            renderHistoryTable();
-        });
-}
-
-// ========== FUNGSI RENDER TABEL ==========
-function renderHistoryTable() {
-    const tbody = document.getElementById("historyBody");
-    if (!tbody) return;
-
-    const recentData = allHistoryData.slice(0, 5);
-    tbody.innerHTML = "";
-
-    if (recentData.length === 0) {
-        tbody.innerHTML =
-            '<tr><td colspan="5" style="text-align:center;">Belum ada data penukaran</td></tr>';
-        return;
-    }
-
-    recentData.forEach((item) => {
-        const row = tbody.insertRow();
-        row.insertCell(0).innerText = item.tanggal;
-        row.insertCell(1).innerHTML =
-            `<strong style="color:#2e7d64;">${item.reward}</strong>`;
-        row.insertCell(2).innerHTML =
-            `<span style="color:#e9c46a; font-weight:600;">${Number(item.poin).toLocaleString()} poin</span>`;
-        row.insertCell(3).innerHTML =
-            `<span class="status-badge-approved"><i class="fas fa-check-circle"></i> ${item.status}</span>`;
-        row.insertCell(4).innerHTML =
-            `<a href="#" class="detail-link" data-tgl="${item.tanggal}">Lihat detail</a>`;
-    });
-
-    document.querySelectorAll("#historyBody .detail-link").forEach((link) => {
-        link.addEventListener("click", (e) => {
-            e.preventDefault();
-            const tgl = link.getAttribute("data-tgl") || "transaksi";
-            showNotification(`✨ Detail penukaran reward: ${tgl}`, "info");
-        });
-    });
-}
-
-function renderFullHistoryTable() {
-    const tbody = document.getElementById("fullHistoryBody");
-    if (!tbody) return;
-
-    tbody.innerHTML = "";
-
-    if (allHistoryData.length === 0) {
-        tbody.innerHTML =
-            '<tr><td colspan="5" style="text-align:center;">Belum ada data penukaran</td></tr>';
-        return;
-    }
-
-    allHistoryData.forEach((item) => {
-        const row = tbody.insertRow();
-        row.insertCell(0).innerText = item.tanggal;
-        row.insertCell(1).innerHTML =
-            `<strong style="color:#2e7d64;">${item.reward}</strong>`;
-        row.insertCell(2).innerHTML =
-            `<span style="color:#e9c46a; font-weight:600;">${Number(item.poin).toLocaleString()} poin</span>`;
-        row.insertCell(3).innerHTML =
-            `<span class="status-badge-approved"><i class="fas fa-check-circle"></i> ${item.status}</span>`;
-        row.insertCell(4).innerHTML =
-            `<a href="#" class="detail-link" data-tgl="${item.tanggal}">Lihat detail</a>`;
-    });
-}
-
-// ========== FUNGSI MODAL ==========
-function openFullHistoryModal() {
-    renderFullHistoryTable();
-    const modal = document.getElementById("fullHistoryModal");
-    if (modal) {
-        modal.style.display = "block";
-        document.body.style.overflow = "hidden";
+function getXAxisTitle() {
+    switch (currentPeriod) {
+        case "weekly":
+            return "Minggu Ke-";
+        case "monthly":
+            return "Bulan";
+        default:
+            return "Tanggal";
     }
 }
 
-function closeFullHistoryModal() {
-    const modal = document.getElementById("fullHistoryModal");
-    if (modal) {
-        modal.style.display = "none";
-        document.body.style.overflow = "";
+function updatePeriodText() {
+    const periodText = document.getElementById("periodText");
+    if (!periodText) return;
+
+    switch (currentPeriod) {
+        case "weekly":
+            periodText.innerHTML = "Periode: 6 Minggu Terakhir";
+            break;
+        case "monthly":
+            periodText.innerHTML = "Periode: 12 Bulan Terakhir";
+            break;
+        default:
+            periodText.innerHTML = "Periode: 7 Hari Terakhir";
     }
 }
 
-// ========== GRAFIK ==========
 function initMainChart() {
     const canvas = document.getElementById("wasteChart");
-    if (!canvas) return;
+    if (!canvas) {
+        console.error("Canvas wasteChart tidak ditemukan!");
+        return;
+    }
 
     const ctx = canvas.getContext("2d");
-    if (mainChart) mainChart.destroy();
-    mainChart = new Chart(ctx, {
-        type: "bar",
+
+    if (!chartLabels || chartLabels.length === 0) {
+        ctx.font = "14px Arial";
+        ctx.fillStyle = "#999";
+        ctx.textAlign = "center";
+        ctx.fillText(
+            "Belum ada data transaksi",
+            canvas.width / 2,
+            canvas.height / 2,
+        );
+        return;
+    }
+
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(ctx, {
+        type: "line",
         data: {
-            labels: labels,
+            labels: chartLabels,
             datasets: [
                 {
-                    label: "Total Penukaran",
-                    data: penukaranPerHari,
-                    backgroundColor: "#2e7d64",
-                    borderRadius: 8,
-                    borderWidth: 0,
+                    label: "Total Penukaran (Unit)",
+                    data: chartData,
+                    borderColor: "#2e7d64",
+                    backgroundColor: "rgba(46, 125, 100, 0.1)",
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: "#2e7d64",
+                    pointBorderColor: "#ffffff",
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
                 },
             ],
         },
@@ -183,34 +96,36 @@ function initMainChart() {
                     intersect: false,
                     callbacks: {
                         label: function (context) {
-                            return `Penukaran: ${context.raw} unit`;
+                            return (
+                                "Total Penukaran: " + context.raw + " transaksi"
+                            );
                         },
                     },
                 },
-                legend: { position: "top" },
+                legend: {
+                    position: "top",
+                },
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { color: "#e9edf2" },
+                    grid: { color: "#eef2f5" },
                     title: {
                         display: true,
                         text: "Jumlah Penukaran (Unit)",
-                        color: "#5f7c8b",
+                        color: "#5e7c8b",
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        precision: 0,
                     },
                 },
                 x: {
                     grid: { display: false },
                     title: {
                         display: true,
-                        text: "Tanggal (Mei 2026)",
-                        color: "#5f7c8b",
-                    },
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 45,
-                        autoSkip: true,
-                        maxTicksLimit: 10,
+                        text: getXAxisTitle(),
+                        color: "#5e7c8b",
                     },
                 },
             },
@@ -218,88 +133,253 @@ function initMainChart() {
     });
 }
 
-// ========== NOTIFIKASI ==========
-function showNotification(message, type = "success") {
-    const notification = document.createElement("div");
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `<i class="fas ${type === "success" ? "fa-check-circle" : "fa-exclamation-circle"}"></i><span>${message}</span>`;
-    notification.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: ${type === "success" ? "#2e7d64" : "#dc3545"};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        z-index: 9999;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    `;
-    document.body.appendChild(notification);
-    setTimeout(() => {
-        notification.remove();
-    }, 4000);
+function renderHistoryTable() {
+    const tbody = document.getElementById("historyBody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    if (!recentTransactions || recentTransactions.length === 0) {
+        tbody.innerHTML =
+            '<tr><td colspan="5" style="text-align: center;">Belum ada transaksi<\/td><\/tr>';
+        return;
+    }
+
+    recentTransactions.forEach((item) => {
+        const row = tbody.insertRow();
+        row.insertCell(0).innerText = item.tanggal_transaksi || "-";
+
+        let rewardNames = "";
+        if (item.rewards && item.rewards.length > 0) {
+            rewardNames = item.rewards.map((r) => r.nama_reward).join(", ");
+        } else {
+            rewardNames = "-";
+        }
+        row.insertCell(1).innerHTML =
+            '<strong style="color:#2e7d64;">' +
+            escapeHtml(rewardNames) +
+            "</strong>";
+        row.insertCell(2).innerHTML =
+            '<span style="color:#e9c46a; font-weight:600;">' +
+            Number(item.poin_transaksi).toLocaleString() +
+            " poin</span>";
+
+        if (item.status_transaksi == 0) {
+            row.insertCell(3).innerHTML =
+                '<span class="status-badge-pending">⏳ Pending</span>';
+        } else {
+            row.insertCell(3).innerHTML =
+                '<span class="status-badge-approved">✓ Disetujui</span>';
+        }
+
+        const btn = document.createElement("button");
+        btn.className = "detail-btn";
+        btn.textContent = "Lihat detail";
+        btn.dataset.id = item.id_transaksi;
+        btn.onclick = function () {
+            openDetailModal(item.id_transaksi);
+        };
+        const cell = row.insertCell(4);
+        cell.appendChild(btn);
+    });
 }
 
-// ========== TOGGLE NAV ==========
-function toggleNav() {
-    const navToggle = document.getElementById("navToggle");
-    const navigation = document.getElementById("navigation");
-    const overlay = document.getElementById("overlay");
+function renderFullHistoryTable() {
+    const tbody = document.getElementById("fullHistoryBody");
+    if (!tbody) return;
 
-    if (navToggle) navToggle.classList.toggle("active");
-    if (navigation) navigation.classList.toggle("active");
-    if (overlay) overlay.classList.toggle("active");
+    tbody.innerHTML = "";
+
+    if (!allTransactions || allTransactions.length === 0) {
+        tbody.innerHTML =
+            '<tr><td colspan="5" style="text-align: center;">Belum ada transaksi<\/td><\/tr>';
+        return;
+    }
+
+    allTransactions.forEach((item) => {
+        const row = tbody.insertRow();
+        row.insertCell(0).innerText = item.tanggal_transaksi || "-";
+
+        let rewardNames = "";
+        if (item.rewards && item.rewards.length > 0) {
+            rewardNames = item.rewards.map((r) => r.nama_reward).join(", ");
+        } else {
+            rewardNames = "-";
+        }
+        row.insertCell(1).innerHTML =
+            '<strong style="color:#2e7d64;">' +
+            escapeHtml(rewardNames) +
+            "</strong>";
+        row.insertCell(2).innerHTML =
+            '<span style="color:#e9c46a; font-weight:600;">' +
+            Number(item.poin_transaksi).toLocaleString() +
+            " poin</span>";
+
+        if (item.status_transaksi == 0) {
+            row.insertCell(3).innerHTML =
+                '<span class="status-badge-pending">⏳ Pending</span>';
+        } else {
+            row.insertCell(3).innerHTML =
+                '<span class="status-badge-approved">✓ Disetujui</span>';
+        }
+
+        const btn = document.createElement("button");
+        btn.className = "detail-btn";
+        btn.textContent = "Lihat detail";
+        btn.dataset.id = item.id_transaksi;
+        btn.onclick = function () {
+            openDetailModal(item.id_transaksi);
+        };
+        const cell = row.insertCell(4);
+        cell.appendChild(btn);
+    });
 }
 
-// ========== EVENT LISTENERS ==========
-function initEventListeners() {
-    const navToggle = document.getElementById("navToggle");
-    const overlay = document.getElementById("overlay");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const lihatSemuaBtn = document.getElementById("lihatSemuaRiwayatBtn");
-    const fullHistoryClose = document.querySelector(".full-history-close");
+function openDetailModal(id) {
+    const allData = [...(recentTransactions || []), ...(allTransactions || [])];
+    const transaction = allData.find(function (t) {
+        return t.id_transaksi == id;
+    });
+
+    if (!transaction) {
+        alert("Data transaksi tidak ditemukan");
+        return;
+    }
+
+    document.getElementById("detailId").innerText =
+        transaction.id_transaksi || "-";
+    document.getElementById("detailTanggal").innerText =
+        transaction.tanggal_transaksi || "-";
+    document.getElementById("detailNama").innerText =
+        transaction.user && transaction.user.nama ? transaction.user.nama : "-";
+
+    let rewardNames = "";
+    if (transaction.rewards && transaction.rewards.length > 0) {
+        rewardNames = transaction.rewards
+            .map(function (r) {
+                return r.nama_reward;
+            })
+            .join(", ");
+    } else {
+        rewardNames = "-";
+    }
+    document.getElementById("detailReward").innerText = rewardNames;
+    document.getElementById("detailPoin").innerText =
+        Number(transaction.poin_transaksi).toLocaleString() + " poin";
+
+    const statusSpan = document.getElementById("detailStatus");
+    if (transaction.status_transaksi == 0) {
+        statusSpan.innerHTML =
+            '<span class="status-badge-pending">⏳ Pending</span>';
+    } else {
+        statusSpan.innerHTML =
+            '<span class="status-badge-approved">✓ Disetujui</span>';
+    }
+
+    document.getElementById("detailTransaksiModal").style.display = "block";
+    document.body.style.overflow = "hidden";
+}
+
+function closeDetailModal() {
+    document.getElementById("detailTransaksiModal").style.display = "none";
+    document.body.style.overflow = "";
+}
+
+function openFullHistoryModal() {
+    renderFullHistoryTable();
     const fullHistoryModal = document.getElementById("fullHistoryModal");
+    if (fullHistoryModal) fullHistoryModal.style.display = "block";
+    document.body.style.overflow = "hidden";
+}
 
-    if (navToggle) navToggle.addEventListener("click", toggleNav);
-    if (overlay) overlay.addEventListener("click", toggleNav);
+function closeFullHistoryModal() {
+    const fullHistoryModal = document.getElementById("fullHistoryModal");
+    if (fullHistoryModal) fullHistoryModal.style.display = "none";
+    document.body.style.overflow = "";
+}
 
+function loadChartByPeriod(period) {
+    window.location.href = "/kDashboard?period=" + period;
+}
+
+function initEventListeners() {
+    const lihatSemuaBtn = document.getElementById("lihatSemuaRiwayatBtn");
+    if (lihatSemuaBtn) {
+        lihatSemuaBtn.onclick = openFullHistoryModal;
+    }
+    const fullHistoryClose = document.querySelector(".full-history-close");
+    if (fullHistoryClose) {
+        fullHistoryClose.onclick = closeFullHistoryModal;
+    }
+    const modalCloseDetail = document.querySelector(".modal-close-detail");
+    const closeDetailBtn = document.querySelector(".close-detail-btn");
+
+    if (modalCloseDetail) {
+        modalCloseDetail.onclick = closeDetailModal;
+    }
+
+    if (closeDetailBtn) {
+        closeDetailBtn.onclick = closeDetailModal;
+    }
+
+    document.querySelectorAll(".period-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            const period = this.dataset.period;
+            loadChartByPeriod(period);
+        });
+    });
+
+    // Logout
+    const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-            showNotification(
-                "🚪 Anda telah logout dari Dompet Sadhar. Sampai jumpa kembali! 🌱",
-                "info",
-            );
-            setTimeout(() => {
-                window.location.href = "/logout";
-            }, 1000);
+        logoutBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            fetch("/logout", {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": document
+                        .querySelector('meta[name="csrf-token"]')
+                        .getAttribute("content"),
+                },
+            }).then(() => (window.location.href = "/login"));
         });
     }
 
-    if (lihatSemuaBtn) {
-        lihatSemuaBtn.addEventListener("click", openFullHistoryModal);
-    }
+    // Verifikasi buttons
+    document.querySelectorAll(".verify-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+            const id = this.dataset.id;
+            if (confirm("Verifikasi transaksi ini?")) {
+                fetch(`/api/transaksi/${id}/approve`, {
+                    method: "PUT",
+                    headers: {
+                        "X-CSRF-TOKEN": document
+                            .querySelector('meta[name="csrf-token"]')
+                            .getAttribute("content"),
+                    },
+                }).then(() => location.reload());
+            }
+        });
+    });
 
-    if (fullHistoryClose) {
-        fullHistoryClose.addEventListener("click", closeFullHistoryModal);
-    }
+    // Click outside modal
+    window.onclick = function (e) {
+        const fullHistoryModal = document.getElementById("fullHistoryModal");
+        const detailModal = document.getElementById("detailTransaksiModal");
 
-    window.addEventListener("click", (e) => {
         if (e.target === fullHistoryModal) {
             closeFullHistoryModal();
         }
-    });
+        if (e.target === detailModal) {
+            closeDetailModal();
+        }
+    };
 }
-
-// ========== INITIALIZATION ==========
 function init() {
-    fetchHistoryData();
+    updatePeriodText();
     initMainChart();
+    renderHistoryTable();
     initEventListeners();
-
-    window.addEventListener("resize", () => {
-        if (mainChart) mainChart.resize();
-    });
 }
 
-// Jalankan ketika halaman siap
 document.addEventListener("DOMContentLoaded", init);

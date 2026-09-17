@@ -1,16 +1,8 @@
-// ============================================
-// wDashboard.js - Grafik menyesuaikan waktu scan user
-// ============================================
-
 let totalPoin = window.initialData?.user_poin || 0;
 let totalBotol = window.initialData?.total_botol || 0;
 let totalBerat = window.initialData?.total_berat || 0;
 let mainChart = null;
 let allHistoryData = [];
-
-// ============================================
-// FUNGSI UPDATE TAMPILAN
-// ============================================
 
 function updateDashboardNumbers() {
     const poinElement = document.getElementById("totalPoinVal");
@@ -28,13 +20,9 @@ function updateDashboardNumbers() {
     }
 }
 
-// ============================================
-// FUNGSI GRAFIK (OTOMATIS MENYESUAIKAN WAKTU SCAN)
-// ============================================
-
 async function loadChart() {
     try {
-        const response = await fetch("/api/chart-stats");
+        const response = await fetch("/api/warga/chart-stats");
         const data = await response.json();
 
         if (data.success) {
@@ -45,7 +33,6 @@ async function loadChart() {
                 data.berat_data,
             );
 
-            // Update periode label
             const periodLabelDiv = document.querySelector(
                 '.chart-fullwidth div[style*="font-size:12px"]',
             );
@@ -123,10 +110,7 @@ function createChart(labels, poinData, botolData, beratData) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            interaction: {
-                mode: "index",
-                intersect: false,
-            },
+            interaction: { mode: "index", intersect: false },
             plugins: {
                 tooltip: {
                     mode: "index",
@@ -147,19 +131,13 @@ function createChart(labels, poinData, botolData, beratData) {
                         },
                     },
                 },
-                legend: {
-                    position: "top",
-                },
+                legend: { position: "top" },
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     grid: { color: "#e9edf2" },
-                    title: {
-                        display: true,
-                        text: "Jumlah",
-                        color: "#5f7c8b",
-                    },
+                    title: { display: true, text: "Jumlah", color: "#5f7c8b" },
                 },
                 x: {
                     grid: { display: false },
@@ -179,27 +157,40 @@ function createEmptyChart() {
     createChart(["Tidak ada data"], [0], [0], [0]);
 }
 
-// ============================================
-// FUNGSI RIWAYAT
-// ============================================
+function formatTanggal(waktuScan, jamScan) {
+    if (!waktuScan) return "-";
+
+    let date = new Date(waktuScan);
+    let tanggal = date.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+
+    let jam = jamScan ? jamScan.substring(0, 5) : "00:00";
+
+    return `${tanggal}, ${jam}`;
+}
 
 async function getHistory() {
     try {
-        const response = await fetch("/api/get-history", {
+        const response = await fetch("/api/history", {
             headers: { Accept: "application/json" },
         });
 
         const data = await response.json();
 
-        if (data.success && data.data.length > 0) {
+        if (data.success && data.data && data.data.length > 0) {
             allHistoryData = data.data.map((item) => ({
-                tanggal: formatTanggal(item.waktu_scan),
+                tanggal: formatTanggal(item.waktu_scan, item.jam_scan),
                 botol: item.jumlah_botol + " Botol",
-                berat: item.berat_botol + " kg",
+                berat: (item.berat_botol || 0) + " kg",
                 poin: "+" + item.poin_dapat,
                 status:
                     item.status_scan === "success" ? "Berhasil" : "Diproses",
             }));
+        } else {
+            allHistoryData = [];
         }
 
         renderHistoryTable();
@@ -212,39 +203,32 @@ async function getHistory() {
 
 async function getAllHistory() {
     try {
-        const response = await fetch("/api/get-all-history", {
+        const response = await fetch("/api/history/all", {
             headers: { Accept: "application/json" },
         });
 
         const data = await response.json();
 
-        if (data.success && data.data.length > 0) {
-            allHistoryData = data.data.map((item) => ({
-                tanggal: formatTanggal(item.waktu_scan),
+        console.log("All History API Response:", data);
+
+        if (data.success && data.data && data.data.length > 0) {
+            const formattedData = data.data.map((item) => ({
+                tanggal: formatTanggal(item.waktu_scan, item.jam_scan),
                 botol: item.jumlah_botol + " Botol",
-                berat: item.berat_botol + " kg",
+                berat: (item.berat_botol || 0) + " kg",
                 poin: "+" + item.poin_dapat,
                 status:
                     item.status_scan === "success" ? "Berhasil" : "Diproses",
             }));
-        }
 
-        renderFullHistoryTable();
+            renderFullHistoryTable(formattedData);
+        } else {
+            renderFullHistoryTable([]);
+        }
     } catch (error) {
         console.error("Error getting all history:", error);
+        renderFullHistoryTable([]);
     }
-}
-
-function formatTanggal(waktuScan) {
-    if (!waktuScan) return "-";
-    let d = new Date(waktuScan);
-    return d.toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    });
 }
 
 function renderHistoryTable() {
@@ -256,7 +240,7 @@ function renderHistoryTable() {
 
     if (recentData.length === 0) {
         tbody.innerHTML =
-            '<tr><td colspan="6" style="text-align:center;">Belum ada riwayat scan</td></tr>';
+            '<tr><td colspan="5" style="text-align:center;">Belum ada riwayat scan<\/td><\/tr>';
         return;
     }
 
@@ -269,24 +253,22 @@ function renderHistoryTable() {
             `<strong style="color:#2b7a5c;">${item.poin}</strong>`;
         row.insertCell(4).innerHTML =
             `<span class="status-badge"><i class="fas fa-check-circle"></i> ${item.status}</span>`;
-        row.insertCell(5).innerHTML =
-            `<a href="#" class="detail-link" onclick="showDetail('${item.tanggal}')">Lihat detail</a>`;
     });
 }
 
-function renderFullHistoryTable() {
+function renderFullHistoryTable(historyData) {
     const tbody = document.getElementById("fullHistoryBody");
     if (!tbody) return;
 
     tbody.innerHTML = "";
 
-    if (allHistoryData.length === 0) {
+    if (!historyData || historyData.length === 0) {
         tbody.innerHTML =
-            '<tr><td colspan="6" style="text-align:center;">Belum ada riwayat scan</td></tr>';
+            '<tr><td colspan="5" style="text-align:center;">Belum ada riwayat scan<\/td><\/tr>';
         return;
     }
 
-    allHistoryData.forEach((item) => {
+    historyData.forEach((item) => {
         const row = tbody.insertRow();
         row.insertCell(0).innerText = item.tanggal;
         row.insertCell(1).innerText = item.botol;
@@ -295,25 +277,15 @@ function renderFullHistoryTable() {
             `<strong style="color:#2b7a5c;">${item.poin}</strong>`;
         row.insertCell(4).innerHTML =
             `<span class="status-badge"><i class="fas fa-check-circle"></i> ${item.status}</span>`;
-        row.insertCell(5).innerHTML =
-            `<a href="#" class="detail-link" onclick="showDetail('${item.tanggal}')">Lihat detail</a>`;
     });
 }
-
-function showDetail(tanggal) {
-    alert(`Detail transaksi: ${tanggal}`);
-}
-
-// ============================================
-// FUNGSI MODAL
-// ============================================
 
 const fullHistoryModal = document.getElementById("fullHistoryModal");
 const lihatSemuaBtn = document.getElementById("lihatSemuaRiwayatBtn");
 const fullHistoryClose = document.querySelector(".full-history-close");
 
 function openFullHistoryModal() {
-    getAllHistory();
+    getAllHistory(); 
     if (fullHistoryModal) fullHistoryModal.style.display = "block";
     document.body.style.overflow = "hidden";
 }
@@ -322,10 +294,6 @@ function closeFullHistoryModal() {
     if (fullHistoryModal) fullHistoryModal.style.display = "none";
     document.body.style.overflow = "";
 }
-
-// ============================================
-// FUNGSI NAVIGASI
-// ============================================
 
 const navToggle = document.getElementById("navToggle");
 const navigation = document.getElementById("navigation");
@@ -336,10 +304,6 @@ function toggleNav() {
     if (navigation) navigation.classList.toggle("active");
     if (overlay) overlay.classList.toggle("active");
 }
-
-// ============================================
-// INISIALISASI
-// ============================================
 
 async function init() {
     updateDashboardNumbers();

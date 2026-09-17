@@ -46,7 +46,6 @@
                     <span>Total Botol</span>
                     <i class="fas fa-bottle-water" style="color:#52b788;"></i>
                 </div>
-                <!-- LANGSUNG TAMPILKAN DATA REAL DARI DATABASE -->
                 <div class="stat-value" id="totalBotolVal">{{ number_format($totalBotol, 0, ',', '.') }}</div>
                 <div class="stat-sub"><i class="fas fa-chart-line"></i> Total botol yang sudah discan</div>
             </div>
@@ -55,8 +54,7 @@
                     <span>Total Berat</span>
                     <i class="fas fa-weight-hanging" style="color:#e9c46a;"></i>
                 </div>
-                <!-- LANGSUNG TAMPILKAN DATA REAL DARI DATABASE -->
-                <div class="stat-value" id="totalBeratVal">{{ number_format($totalBerat, 0, ',', '.') }}</div>
+                <div class="stat-value" id="totalBeratVal">{{ number_format((float)$totalBerat, 2, ',', '.') }}</div>
                 <div class="stat-sub"><i class="fas fa-chart-line"></i> Total berat yang sudah discan</div>
             </div>
         </div>

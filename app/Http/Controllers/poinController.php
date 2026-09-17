@@ -4,17 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\akun;
-use App\Models\DataSampah;
-use App\Models\AkunSampah;
+use App\Models\dataSampah;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
-class PoinController extends Controller
+class poinController extends Controller
 {
-    // ============================================
-    // METHOD UNTUK DASHBOARD
-    // ============================================
-    
     public function getAllStats()
     {
         $userId = session('user_id');
@@ -30,11 +24,11 @@ class PoinController extends Controller
         
         $user = akun::where('id_user', $userId)->first();
         
-        $totalBotol = DataSampah::where('id_user', $userId)
+        $totalBotol = dataSampah::where('id_user', $userId)
             ->where('status_scan', 'success')
             ->sum('jumlah_botol');
         
-        $totalBerat = DataSampah::where('id_user', $userId)
+        $totalBerat = dataSampah::where('id_user', $userId)
             ->where('status_scan', 'success')
             ->sum('berat_botol');
         
@@ -78,7 +72,7 @@ class PoinController extends Controller
             ]);
         }
         
-        $totalBotol = DataSampah::where('id_user', $userId)
+        $totalBotol = dataSampah::where('id_user', $userId)
             ->where('status_scan', 'success')
             ->sum('jumlah_botol');
         
@@ -99,7 +93,7 @@ class PoinController extends Controller
             ]);
         }
         
-        $totalBerat = DataSampah::where('id_user', $userId)
+        $totalBerat = dataSampah::where('id_user', $userId)
             ->where('status_scan', 'success')
             ->sum('berat_botol');
         
@@ -109,60 +103,52 @@ class PoinController extends Controller
         ]);
     }
     
-    // ============================================
-    // METHOD UNTUK GRAFIK (BERDASARKAN WAKTU SCAN USER)
-    // ============================================
-    
     public function getChartStats()
-    {
-        $userId = session('user_id');
-        
-        if (!$userId) {
-            return response()->json([
-                'success' => false,
-                'labels' => [],
-                'poin_data' => [],
-                'botol_data' => [],
-                'berat_data' => []
-            ]);
-        }
-        
-        // Ambil range tanggal dari data user yang login
-        $minDate = DataSampah::where('id_user', $userId)
-            ->where('status_scan', 'success')
-            ->min('waktu_scan');
-        
-        $maxDate = DataSampah::where('id_user', $userId)
-            ->where('status_scan', 'success')
-            ->max('waktu_scan');
-        
-        // Jika tidak ada data
-        if (!$minDate || !$maxDate) {
-            return response()->json([
-                'success' => true,
-                'labels' => ['Belum ada data'],
-                'poin_data' => [0],
-                'botol_data' => [0],
-                'berat_data' => [0],
-                'period_label' => 'Belum ada data scan'
-            ]);
-        }
-        
-        $startDate = \Carbon\Carbon::parse($minDate);
-        $endDate = \Carbon\Carbon::parse($maxDate);
-        $daysDiff = $startDate->diffInDays($endDate);
-        
-        // Sesuaikan tampilan berdasarkan rentang data
-        if ($daysDiff <= 30) {
-            return $this->getDailyData($userId, $startDate, $endDate);
-        } elseif ($daysDiff <= 180) {
-            return $this->getWeeklyChartData($userId, $startDate, $endDate);
-        } else {
-            return $this->getMonthlyChartData($userId, $startDate, $endDate);
-        }
+{
+    $userId = session('user_id');
+    
+    if (!$userId) {
+        return response()->json([
+            'success' => false,
+            'labels' => [],
+            'poin_data' => [],
+            'botol_data' => [],
+            'berat_data' => []
+        ]);
     }
     
-    // Data per hari
+    $minDate = dataSampah::where('id_user', $userId)
+        ->where('status_scan', 'success')
+        ->min('waktu_scan');
+    
+    $maxDate = dataSampah::where('id_user', $userId)
+        ->where('status_scan', 'success')
+        ->max('waktu_scan');
+    
+    if (!$minDate || !$maxDate) {
+        return response()->json([
+            'success' => true,
+            'labels' => ['Belum ada data'],
+            'poin_data' => [0],
+            'botol_data' => [0],
+            'berat_data' => [0],
+            'period_label' => 'Belum ada data scan'
+        ]);
+    }
+    
+    $startDate = \Carbon\Carbon::parse($minDate);
+    $endDate = \Carbon\Carbon::parse($maxDate);
+    $daysDiff = $startDate->diffInDays($endDate);
+    
+    if ($daysDiff <= 30) {
+        return $this->getDailyData($userId, $startDate, $endDate);
+    } elseif ($daysDiff <= 180) {
+        return $this->getWeeklyChartData($userId, $startDate, $endDate);
+    } else {
+        return $this->getMonthlyChartData($userId, $startDate, $endDate);
+    }
+}
+    
     private function getDailyData($userId, $startDate, $endDate)
     {
         $labels = [];
@@ -170,7 +156,7 @@ class PoinController extends Controller
         $botolData = [];
         $beratData = [];
         
-        $dailyData = DataSampah::where('id_user', $userId)
+        $dailyData = dataSampah::where('id_user', $userId)
             ->where('status_scan', 'success')
             ->whereBetween('waktu_scan', [$startDate, $endDate])
             ->select(
@@ -214,7 +200,6 @@ class PoinController extends Controller
         ]);
     }
     
-    // Data per minggu
     private function getWeeklyChartData($userId, $startDate, $endDate)
     {
         $labels = [];
@@ -232,7 +217,7 @@ class PoinController extends Controller
         while ($currentStart <= $endOfWeek) {
             $currentEnd = $currentStart->copy()->endOfWeek();
             
-            $data = DataSampah::where('id_user', $userId)
+            $data = dataSampah::where('id_user', $userId)
                 ->where('status_scan', 'success')
                 ->whereBetween('waktu_scan', [$currentStart, $currentEnd])
                 ->select(
@@ -264,7 +249,6 @@ class PoinController extends Controller
         ]);
     }
     
-    // Data per bulan
     private function getMonthlyChartData($userId, $startDate, $endDate)
     {
         $labels = [];
@@ -273,7 +257,7 @@ class PoinController extends Controller
         $beratData = [];
         $months = [];
         
-        $monthlyData = DataSampah::where('id_user', $userId)
+        $monthlyData = dataSampah::where('id_user', $userId)
             ->where('status_scan', 'success')
             ->whereBetween('waktu_scan', [$startDate, $endDate])
             ->select(
@@ -307,10 +291,6 @@ class PoinController extends Controller
         ]);
     }
     
-    // ============================================
-    // METHOD UNTUK RIWAYAT
-    // ============================================
-    
     public function getHistory()
     {
         $userId = session('user_id');
@@ -322,9 +302,9 @@ class PoinController extends Controller
             ]);
         }
         
-        $histories = DataSampah::where('id_user', $userId)
+        $histories = dataSampah::where('id_user', $userId)
             ->where('status_scan', 'success')
-            ->orderBy('waktu_scan', 'desc')
+            ->orderBy('id_sampah', 'desc')
             ->limit(10)
             ->get();
         
@@ -345,9 +325,9 @@ class PoinController extends Controller
             ]);
         }
         
-        $histories = DataSampah::where('id_user', $userId)
+        $histories = dataSampah::where('id_user', $userId)
             ->where('status_scan', 'success')
-            ->orderBy('waktu_scan', 'desc')
+            ->orderBy('id_sampah', 'desc')
             ->get();
         
         return response()->json([
@@ -355,10 +335,6 @@ class PoinController extends Controller
             'data' => $histories
         ]);
     }
-    
-    // ============================================
-    // METHOD UNTUK UPDATE POIN
-    // ============================================
     
     public function updatePoin(Request $request)
     {
@@ -397,10 +373,6 @@ class PoinController extends Controller
         ]);
     }
     
-    // ============================================
-    // METHOD UNTUK SAVE TRANSAKSI
-    // ============================================
-    
     public function saveTransaksi(Request $request)
     {
         $userId = session('user_id');
@@ -409,44 +381,42 @@ class PoinController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'User tidak login'
-            ]);
+            ], 401);
         }
         
         $request->validate([
             'jumlah_botol' => 'required|integer',
             'berat_botol' => 'required|numeric',
             'poin_dapat' => 'required|integer',
-            'status_scan' => 'required|string'
         ]);
         
         DB::beginTransaction();
         
         try {
-            // Insert into data_sampah
-            $dataSampah = DataSampah::create([
+            $now = now();
+            
+            $dataSampah = dataSampah::create([
                 'id_user' => $userId,
                 'jumlah_botol' => $request->jumlah_botol,
                 'berat_botol' => $request->berat_botol,
                 'poin_dapat' => $request->poin_dapat,
-                'status_scan' => $request->status_scan,
-                'waktu_scan' => now()
+                'status_scan' => 'success',
+                'waktu_scan' => $now->toDateString(),
+                'jam_scan' => $now->toTimeString()
             ]);
             
-            // Update user poin
             $user = akun::where('id_user', $userId)->first();
             $user->total_poin = ($user->total_poin ?? 0) + $request->poin_dapat;
             $user->save();
             
-            // Update session
             session(['user_poin' => $user->total_poin]);
             
             DB::commit();
             
             return response()->json([
                 'success' => true,
-                'message' => 'Transaksi berhasil disimpan!',
-                'poin' => $user->total_poin,
-                'data' => $dataSampah
+                'message' => 'Upload berhasil!',
+                'poin' => $user->total_poin
             ]);
             
         } catch (\Exception $e) {
@@ -454,8 +424,68 @@ class PoinController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan transaksi: ' . $e->getMessage()
-            ]);
+                'message' => 'Gagal: ' . $e->getMessage()
+            ], 500);
         }
     }
+
+    // ========== METHOD UNTUK RIWAYAT REWARD LENGKAP ==========
+
+    // ========== METHOD UNTUK RIWAYAT REWARD LENGKAP (TANPA transaksi_reward) ==========
+
+public function getAllHistoryReward()
+{
+    $userId = session('user_id');
+    
+    if (!$userId) {
+        return response()->json([
+            'success' => false,
+            'data' => [],
+            'message' => 'User tidak login'
+        ]);
+    }
+    
+    try {
+        // Ambil SEMUA transaksi user
+        $transaksis = \App\Models\transaksi::where('id_user', $userId)
+            ->orderBy('id_transaksi', 'desc')
+            ->get();
+        
+        $history = [];
+        
+        foreach ($transaksis as $transaksi) {
+            $carbonDate = \Carbon\Carbon::parse($transaksi->tanggal_transaksi);
+            $carbonDate->locale('id');
+            $tanggalFormatted = $carbonDate->translatedFormat('j F Y');
+            
+            $jamFormatted = $transaksi->jam_transaksi 
+                ? substr($transaksi->jam_transaksi, 0, 5) 
+                : '00:00';
+            
+            $history[] = [
+                'id' => $transaksi->id_transaksi,
+                'tanggal' => $tanggalFormatted . ', ' . $jamFormatted,
+                'reward' => 'Penukaran Poin',
+                'jumlah' => $transaksi->jumlah_transaksi ?? 1,
+                'total_poin' => $transaksi->poin_transaksi,
+                'status' => $transaksi->status_transaksi ?? 'pending'
+            ];
+        }
+        
+        return response()->json([
+            'success' => true,
+            'data' => $history,
+            'total' => count($history)
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Error getAllHistoryReward: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'data' => [],
+            'message' => $e->getMessage()
+        ]);
+    }
+}
 }

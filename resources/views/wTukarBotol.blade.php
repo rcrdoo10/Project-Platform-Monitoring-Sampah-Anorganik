@@ -8,7 +8,6 @@
 @section('content')
 
 <script>
-    // Data poin dari server (session/database)
     window.userData = {
         poin: {{ $user_poin ?? session('user_poin', 0) }},
         nama: "{{ $user_nama ?? session('user_nama', 'User') }}",
@@ -43,7 +42,6 @@
         </div>
     </div>
 
-    <!-- Sisa konten sama seperti sebelumnya -->
     <div class="upload-section">
         <h3><i class="fas fa-cloud-upload-alt" style="color:#2e7d64;"></i> Upload Sampah Plastik</h3>
         <form id="uploadForm">
@@ -56,40 +54,45 @@
 
             <div class="volume-options">
                 <label class="volume-card">
-                    <input type="radio" name="volume" value="small" data-botol="10" data-berat="0.15" data-poin="15">
+                    <input type="radio" name="volume" value="small" data-category="small">
                     <div class="volume-content">
                         <i class="fas fa-bottle-water"></i>
                         <strong>Kecil</strong>
-                        <span>330-600 ml</span>
-                        <span class="volume-badge">~10 botol/kg</span>
+                        <span>220-330 ML</span>
                     </div>
                 </label>
                 <label class="volume-card">
-                    <input type="radio" name="volume" value="medium" data-botol="8" data-berat="0.2" data-poin="20">
+                    <input type="radio" name="volume" value="medium" data-category="medium">
                     <div class="volume-content">
                         <i class="fas fa-bottle-water"></i>
                         <strong>Sedang</strong>
-                        <span>600-1000 ml</span>
-                        <span class="volume-badge">~8 botol/kg</span>
+                        <span>450-750 ML</span>
                     </div>
                 </label>
                 <label class="volume-card">
-                    <input type="radio" name="volume" value="large" data-botol="5" data-berat="0.35" data-poin="35">
+                    <input type="radio" name="volume" value="large" data-category="large">
                     <div class="volume-content">
                         <i class="fas fa-bottle-water"></i>
                         <strong>Besar</strong>
-                        <span>1.5-2 L</span>
-                        <span class="volume-badge">~5 botol/kg</span>
+                        <span>1 - 2 L</span>
                     </div>
                 </label>
+            </div>
+
+            <div id="detailSizeContainer" style="display: none; margin-top: 15px; padding: 12px; background: #f8fafc; border-radius: 20px;">
+                <div style="font-size: 0.8rem; color: #2e7d64; margin-bottom: 10px; font-weight: 600;">
+                    <i class="fas fa-tag"></i> Pilih Ukuran Detail:
+                </div>
+                <div id="detailSizeButtons" class="detail-size-buttons">
+                </div>
             </div>
 
             <div class="form-summary" id="formSummary" style="display: none;">
                 <h4><i class="fas fa-chart-simple" style="color:#2e7d64;"></i> Ringkasan</h4>
                 <div class="summary-details">
-                    <span>Perkiraan Botol: <strong id="summaryBotol">0</strong> botol</span>
-                    <span>Perkiraan Berat: <strong id="summaryBerat">0</strong> kg</span>
-                    <span>Poin Dapat: <strong id="summaryPoin">0</strong> poin</span>
+                    <span>📦 Ukuran: <strong id="summarySize">-</strong></span>
+                    <span>⚖️ Berat: <strong id="summaryBerat">0</strong> kg</span>
+                    <span>⭐ Poin Dapat: <strong id="summaryPoin">0</strong> poin</span>
                 </div>
             </div>
 

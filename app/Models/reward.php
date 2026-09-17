@@ -4,14 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Reward extends Model
+class reward extends Model
 {
     protected $table = 'reward';
     protected $primaryKey = 'id_reward';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
-    
+
     protected $fillable = [
-        'id_reward',
         'nama_reward',
         'jenis_reward',
         'stok',
@@ -20,4 +21,17 @@ class Reward extends Model
         'deskripsi',
         'kategori'
     ];
+
+    // Relasi ke transaksi melalui transaksiReward
+    public function transaksis()
+    {
+        return $this->belongsToMany(transaksi::class, 'transaksi_reward', 'id_reward', 'id_transaksi')
+                    ->withPivot('jumlah_reward');
+    }
+    
+    // Relasi ke transaksiReward
+    public function transaksiRewards()
+    {
+        return $this->hasMany(transaksiReward::class, 'id_reward', 'id_reward');
+    }
 }

@@ -1,277 +1,350 @@
-let totalPoin = 9999;
+let totalPoin = window.userData?.poin || 0;
 let selectedReward = null;
 let selectedQuantity = 1;
 let currentCategoryFilter = "all";
 let currentHistoryFilter = "all";
+let rewardsData = [];
+let formattedRewards = [];
 
-// Data reward
-let rewardsData = [
-  {
-    id: 1,
-    name: "Paket Nasi Box",
-    points: 500,
-    stock: 25,
-    category: "food",
-    desc: "Paket nasi lengkap dengan lauk",
-  },
-  {
-    id: 2,
-    name: "Jus Buah Segar",
-    points: 300,
-    stock: 40,
-    category: "drink",
-    desc: "Jus buah segar tanpa pengawet",
-  },
-  {
-    id: 3,
-    name: "Voucher Makanan",
-    points: 400,
-    stock: 30,
-    category: "food",
-    desc: "Voucher untuk makan di restoran mitra",
-  },
-  {
-    id: 4,
-    name: "Kopi Spesial",
-    points: 250,
-    stock: 50,
-    category: "drink",
-    desc: "Kopi pilihan berkualitas",
-  },
-  {
-    id: 5,
-    name: "Tumbler Stainless Steel",
-    points: 800,
-    stock: 15,
-    category: "goods",
-    desc: "Tumbler ramah lingkungan",
-  },
-  {
-    id: 6,
-    name: "Eco Bag",
-    points: 200,
-    stock: 50,
-    category: "goods",
-    desc: "Tas belanja ramah lingkungan",
-  },
-  {
-    id: 7,
-    name: "Pupuk Organik 5kg",
-    points: 300,
-    stock: 40,
-    category: "goods",
-    desc: "Pupuk untuk tanaman",
-  },
-  {
-    id: 8,
-    name: "Donasi Penanaman Pohon",
-    points: 1000,
-    stock: 100,
-    category: "goods",
-    desc: "Donasi untuk menanam 1 pohon",
-  },
-  {
-    id: 9,
-    name: "Snack Sehat",
-    points: 150,
-    stock: 60,
-    category: "food",
-    desc: "Camilan sehat organik",
-  },
-  {
-    id: 10,
-    name: "Air Mineral",
-    points: 100,
-    stock: 80,
-    category: "drink",
-    desc: "Air mineral kemasan",
-  },
-];
+let userExchangeHistory = [];
+let fullHistoryData = []; 
 
-// Riwayat penukaran user
-let userExchangeHistory = [
-  {
-    id: 1,
-    tanggal: "30 Mei 2026, 14:30",
-    reward: "Paket Nasi Box",
-    jumlah: 2,
-    totalPoin: 1000,
-    status: "pending",
-  },
-  {
-    id: 2,
-    tanggal: "28 Mei 2026, 10:15",
-    reward: "Tumbler Stainless Steel",
-    jumlah: 1,
-    totalPoin: 800,
-    status: "approved",
-  },
-  {
-    id: 3,
-    tanggal: "25 Mei 2026, 09:45",
-    reward: "Kopi Spesial",
-    jumlah: 3,
-    totalPoin: 750,
-    status: "approved",
-  },
-  {
-    id: 4,
-    tanggal: "27 Mei 2026, 16:20",
-    reward: "Voucher Makanan",
-    jumlah: 2,
-    totalPoin: 800,
-    status: "pending",
-  },
-  {
-    id: 5,
-    tanggal: "22 Mei 2026, 11:00",
-    reward: "Eco Bag",
-    jumlah: 1,
-    totalPoin: 200,
-    status: "approved",
-  },
-];
+function showNotification(message, type = "success") {
+    const notification = document.createElement("div");
+    notification.className = `notification notification-${type}`;
 
-function loadData() {
-  const savedPoin = localStorage.getItem("totalPoin");
-  const savedRewards = localStorage.getItem("rewardsData");
-  const savedHistory = localStorage.getItem("userExchangeHistory");
+    let icon = "fa-check-circle";
+    if (type === "error") icon = "fa-exclamation-circle";
+    if (type === "info") icon = "fa-info-circle";
 
-  if (savedPoin) totalPoin = parseInt(savedPoin);
-  if (savedRewards) rewardsData = JSON.parse(savedRewards);
-  if (savedHistory) userExchangeHistory = JSON.parse(savedHistory);
+    notification.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
+    document.body.appendChild(notification);
 
-  updatePoinDisplay();
+    setTimeout(() => {
+        notification.style.animation = "slideOutRight 0.3s ease";
+        setTimeout(() => notification.remove(), 300);
+    }, 4000);
 }
 
-function saveData() {
-  localStorage.setItem("totalPoin", totalPoin);
-  localStorage.setItem("rewardsData", JSON.stringify(rewardsData));
-  localStorage.setItem(
-    "userExchangeHistory",
-    JSON.stringify(userExchangeHistory),
-  );
+function loadDataFromWindow() {
+    if (window.rewardsData && window.rewardsData.length > 0) {
+        rewardsData = window.rewardsData;
+        formatRewards();
+        renderRewards();
+    } else {
+        fetchRewardsFromServer();
+    }
+}
+
+async function fetchRewardsFromServer() {
+    try {
+        const response = await fetch("/api/reward/all");
+        const data = await response.json();
+
+        if (data.success && data.data && data.data.length > 0) {
+            rewardsData = data.data;
+        } else {
+            rewardsData = [];
+            showNotification("Belum ada reward yang tersedia", "info");
+        }
+
+        formatRewards();
+        renderRewards();
+    } catch (error) {
+        console.error("Error fetching rewards:", error);
+        rewardsData = [];
+        showNotification("Gagal memuat data reward", "error");
+        formatRewards();
+        renderRewards();
+    }
+}
+
+function formatRewards() {
+    if (!rewardsData || rewardsData.length === 0) {
+        formattedRewards = [];
+        return;
+    }
+
+    formattedRewards = rewardsData.map((item) => ({
+        id: Number(item.id_reward || item.id),
+        name: item.nama_reward || item.name,
+        points: Number(item.poin_dibutuhkan || item.points),
+        stock: Number(item.stok || item.stock),
+        category: item.jenis_reward || item.kategori || item.category,
+        desc: item.deskripsi || item.desc,
+    }));
 }
 
 function updatePoinDisplay() {
-  const rewardPoinDisplay = document.getElementById("rewardPoinDisplay");
-  if (rewardPoinDisplay)
-    rewardPoinDisplay.innerText = totalPoin.toLocaleString("id-ID");
+    const rewardPoinDisplay = document.getElementById("rewardPoinDisplay");
+    if (rewardPoinDisplay) {
+        rewardPoinDisplay.innerText = totalPoin.toLocaleString("id-ID");
+    }
 }
 
-function showNotification(message, type = "success") {
-  const notification = document.createElement("div");
-  notification.className = `notification notification-${type}`;
-  notification.innerHTML = `<i class="fas ${type === "success" ? "fa-check-circle" : type === "error" ? "fa-exclamation-circle" : "fa-info-circle"}"></i><span>${message}</span>`;
-  document.body.appendChild(notification);
-  setTimeout(() => {
-    notification.style.animation = "slideOutRight 0.3s ease";
-    setTimeout(() => notification.remove(), 300);
-  }, 4000);
+async function fetchExchangeHistory() {
+    try {
+        const response = await fetch("/api/user/exchange-history");
+        const data = await response.json();
+
+        if (data.success && data.data.length > 0) {
+            userExchangeHistory = data.data.map((item) => ({
+                id: item.id,
+                tanggal: item.tanggal,
+                reward: item.reward,
+                jumlah: item.jumlah,
+                totalPoin: item.total_poin,
+                status: item.status,
+            }));
+        } else {
+            userExchangeHistory = [];
+        }
+
+        renderUserExchangeHistory();
+    } catch (error) {
+        console.error("Error fetching history:", error);
+        userExchangeHistory = [];
+        renderUserExchangeHistory();
+    }
+}
+
+async function fetchAllHistoryReward() {
+    const loadingIndicator = document.getElementById("historyLoadingIndicator");
+    if (loadingIndicator) loadingIndicator.style.display = "block";
+
+    try {
+        const response = await fetch("/api/history/reward/all");
+        const data = await response.json();
+
+        if (data.success && data.data.length > 0) {
+            fullHistoryData = data.data.map((item) => ({
+                id: item.id,
+                tanggal: item.tanggal,
+                reward: item.reward,
+                jumlah: item.jumlah,
+                totalPoin: item.total_poin,
+                status: item.status,
+            }));
+        } else {
+            fullHistoryData = [];
+        }
+
+        return fullHistoryData;
+    } catch (error) {
+        console.error("Error fetching all history:", error);
+        fullHistoryData = [];
+        return [];
+    } finally {
+        if (loadingIndicator) loadingIndicator.style.display = "none";
+    }
+}
+
+function renderFullHistoryModal() {
+    const modalContent = document.getElementById("fullHistoryContent");
+    if (!modalContent) return;
+
+    if (fullHistoryData.length === 0) {
+        modalContent.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-inbox" style="font-size: 48px; color: #ccc;"></i>
+                <p style="margin-top: 16px;">Belum ada riwayat penukaran</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = `
+        <div class="table-responsive">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 2px solid #e9edf2;">
+                        <th style="padding: 12px; text-align: left;">Tanggal</th>
+                        <th style="padding: 12px; text-align: left;">Reward</th>
+                        <th style="padding: 12px; text-align: center;">Jumlah</th>
+                        <th style="padding: 12px; text-align: center;">Total Poin</th>
+                        <th style="padding: 12px; text-align: center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    fullHistoryData.forEach((item) => {
+        let statusBadge = "";
+        if (item.status === "pending") {
+            statusBadge =
+                '<span class="status-badge-pending"><i class="fas fa-clock"></i> Menunggu Verifikasi</span>';
+        } else if (item.status === "disetujui") {
+            statusBadge =
+                '<span class="status-badge-approved"><i class="fas fa-check-circle"></i> Disetujui</span>';
+        } else {
+            statusBadge =
+                '<span class="status-badge-pending">' + item.status + "</span>";
+        }
+
+        html += `
+            <tr style="border-bottom: 1px solid #e9edf2;">
+                <td style="padding: 12px;">${item.tanggal}</td>
+                <td style="padding: 12px;"><strong style="color:#2e7d64;">${item.reward}</strong></td>
+                <td style="padding: 12px; text-align: center;">${item.jumlah} x</td>
+                <td style="padding: 12px; text-align: center;"><span style="color:#e9c46a; font-weight:600;">${item.totalPoin.toLocaleString()} poin</span></td>
+                <td style="padding: 12px; text-align: center;">${statusBadge}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    modalContent.innerHTML = html;
+}
+
+async function openFullHistoryModal() {
+    const modal = document.getElementById("fullHistoryModal");
+    if (!modal) return;
+
+    // Tampilkan loading di modal
+    const modalContent = document.getElementById("fullHistoryContent");
+    if (modalContent) {
+        modalContent.innerHTML =
+            '<div style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin"></i> Memuat semua riwayat...</div>';
+    }
+
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden";
+
+    // Ambil data lengkap dari server
+    await fetchAllHistoryReward();
+
+    // Render data ke modal
+    renderFullHistoryModal();
+}
+
+
+function closeFullHistoryModal() {
+    const modal = document.getElementById("fullHistoryModal");
+    if (modal) {
+        modal.style.display = "none";
+        document.body.style.overflow = "";
+    }
 }
 
 function renderUserExchangeHistory() {
-  const tbody = document.getElementById("exchangeHistoryBody");
-  if (!tbody) return;
+    const tbody = document.getElementById("exchangeHistoryBody");
+    if (!tbody) return;
 
-  let filteredData = userExchangeHistory;
-  if (currentHistoryFilter !== "all") {
-    filteredData = userExchangeHistory.filter(
-      (item) => item.status === currentHistoryFilter,
-    );
-  }
-
-  tbody.innerHTML = "";
-  filteredData.forEach((item) => {
-    const row = tbody.insertRow();
-    row.insertCell(0).innerText = item.tanggal;
-    row.insertCell(1).innerHTML =
-      `<strong style="color:#2e7d64;">${item.reward}</strong>`;
-    row.insertCell(2).innerHTML = `${item.jumlah} x`;
-    row.insertCell(3).innerHTML =
-      `<span style="color:#e9c46a; font-weight:600;">${item.totalPoin.toLocaleString()} poin</span>`;
-
-    if (item.status === "pending") {
-      row.insertCell(4).innerHTML =
-        `<span class="status-badge-pending"><i class="fas fa-clock"></i> Menunggu Verifikasi</span>`;
-      row.insertCell(5).innerHTML =
-        `<a href="#" class="detail-link" data-id="${item.id}">Lihat detail</a>`;
-    } else {
-      row.insertCell(4).innerHTML =
-        `<span class="status-badge-approved"><i class="fas fa-check-circle"></i> Disetujui</span>`;
-      row.insertCell(5).innerHTML =
-        `<a href="#" class="detail-link" data-id="${item.id}">Lihat detail</a>`;
+    let filteredData = userExchangeHistory;
+    if (currentHistoryFilter !== "all") {
+        filteredData = userExchangeHistory.filter(
+            (item) => item.status === currentHistoryFilter,
+        );
     }
-  });
 
-  document
-    .querySelectorAll("#exchangeHistoryBody .detail-link")
-    .forEach((link) => {
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        const id = parseInt(link.getAttribute("data-id"));
-        const transaction = userExchangeHistory.find((t) => t.id === id);
-        if (transaction) {
-          showNotification(
-            `✨ Detail penukaran: ${transaction.jumlah}x ${transaction.reward} pada ${transaction.tanggal}. Total poin: ${transaction.totalPoin.toLocaleString()} poin. Status: ${transaction.status === "pending" ? "Menunggu verifikasi" : "Telah disetujui"}.`,
-            "info",
-          );
+    tbody.innerHTML = "";
+
+    if (filteredData.length === 0) {
+        tbody.innerHTML =
+            '<tr><td colspan="5" style="text-align:center;">Belum ada riwayat penukaran</td></tr>';
+        return;
+    }
+
+    filteredData.forEach((item) => {
+        const row = tbody.insertRow();
+        row.insertCell(0).innerText = item.tanggal;
+        row.insertCell(1).innerHTML =
+            `<strong style="color:#2e7d64;">${item.reward}</strong>`;
+        row.insertCell(2).innerHTML = `${item.jumlah} x`;
+        row.insertCell(3).innerHTML =
+            `<span style="color:#e9c46a; font-weight:600;">${item.totalPoin.toLocaleString()} poin</span>`;
+
+        // Status badge dengan enum yang benar
+        if (item.status === "pending") {
+            row.insertCell(4).innerHTML = `<span class="status-badge-pending"><i class="fas fa-clock"></i> Menunggu Verifikasi</span>`;
+        } else if (item.status === "approved" || item.status === "disetujui") {  // ← Tambahkan "approved"
+            row.insertCell(4).innerHTML = `<span class="status-badge-approved"><i class="fas fa-check-circle"></i> Disetujui</span>`;
+        } else {
+            row.insertCell(4).innerHTML = `<span class="status-badge-pending">${item.status}</span>`;
         }
-      });
     });
 }
 
 function renderRewards() {
-  const container = document.getElementById("rewardItemsContainer");
-  if (!container) return;
+    const container = document.getElementById("rewardItemsContainer");
+    if (!container) return;
 
-  let filteredRewards = rewardsData;
-  if (currentCategoryFilter !== "all") {
-    filteredRewards = rewardsData.filter(
-      (reward) => reward.category === currentCategoryFilter,
-    );
-  }
+    let filteredRewards = formattedRewards;
 
-  container.innerHTML = "";
-  filteredRewards.forEach((reward) => {
-    const isLowStock = reward.stock <= 5;
-    const stockDisplay = reward.stock > 0 ? `${reward.stock} tersisa` : "Habis";
-    const isOutOfStock = reward.stock <= 0;
-
-    let categoryClass = "";
-    let iconName = "";
-
-    if (reward.category === "food") {
-      categoryClass = "food";
-      iconName = "fa-utensils";
-    } else if (reward.category === "drink") {
-      categoryClass = "drink";
-      iconName = "fa-mug-hot";
-    } else {
-      categoryClass = "goods";
-      iconName = "fa-box";
+    if (currentCategoryFilter !== "all") {
+        filteredRewards = formattedRewards.filter((reward) => {
+            return reward.category === currentCategoryFilter;
+        });
     }
 
-    const rewardDiv = document.createElement("div");
-    rewardDiv.className = "reward-item";
-    rewardDiv.setAttribute("data-id", reward.id);
+    container.innerHTML = "";
 
-    rewardDiv.innerHTML = `
+    if (filteredRewards.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:40px;">Belum ada reward tersedia untuk kategori ini</div>';
+        return;
+    }
+
+    filteredRewards.forEach((reward) => {
+        const stock = Number(reward.stock) || 0;
+        const points = Number(reward.points) || 0;
+        const name = reward.name || 'Reward';
+        const category = reward.category || 'barang';
+        const desc = reward.desc || '';
+        
+        const isLowStock = stock > 0 && stock <= 5;
+        const isOutOfStock = stock <= 0;
+        const stockDisplay = isOutOfStock ? "Habis" : `${stock} tersisa`;
+        
+        let stockClass = '';
+        if (isOutOfStock) {
+            stockClass = 'out-of-stock';
+        } else if (isLowStock) {
+            stockClass = 'low-stock';
+        }
+
+        let categoryClass = "";
+        let iconName = "";
+        let categoryDisplay = "";
+
+        if (category === "makanan") {
+            categoryClass = "food";
+            iconName = "fa-utensils";
+            categoryDisplay = "Makanan";
+        } else if (category === "minuman") {
+            categoryClass = "drink";
+            iconName = "fa-mug-hot";
+            categoryDisplay = "Minuman";
+        } else {
+            categoryClass = "goods";
+            iconName = "fa-box";
+            categoryDisplay = "Barang";
+        }
+
+        const rewardDiv = document.createElement("div");
+        rewardDiv.className = "reward-item";
+        rewardDiv.setAttribute("data-id", reward.id);
+
+        rewardDiv.innerHTML = `
             <div class="reward-info">
                 <div class="reward-icon ${categoryClass}">
                     <i class="fas ${iconName}"></i>
                 </div>
                 <div class="reward-details">
-                    <h4>${reward.name}</h4>
-                    <p>${reward.desc}</p>
+                    <h4>${name}</h4>
+                    <p>Kategori: ${categoryDisplay} ${desc ? "- " + desc : ""}</p>
                 </div>
             </div>
-            <div class="reward-stock ${isLowStock && reward.stock > 0 ? "low-stock" : ""}">
+            <div class="reward-stock ${stockClass}">
                 <i class="fas fa-boxes"></i>
                 <span>Stok: ${stockDisplay}</span>
             </div>
             <div class="reward-price">
-                <i class="fas fa-star"></i> ${reward.points.toLocaleString()} poin/unit
+                <i class="fas fa-star"></i> ${points.toLocaleString()} poin/unit
             </div>
             <div class="exchange-control">
                 <div class="quantity-selector">
@@ -280,215 +353,278 @@ function renderRewards() {
                     <button class="qty-plus" data-id="${reward.id}" ${isOutOfStock ? "disabled" : ""}>+</button>
                 </div>
                 <div class="total-points">
-                    Total: <strong id="total-${reward.id}">${reward.points.toLocaleString()}</strong> poin
+                    Total: <strong id="total-${reward.id}">${points.toLocaleString()}</strong> poin
                 </div>
                 <button class="exchange-btn" data-id="${reward.id}" ${isOutOfStock ? "disabled" : ""}>
                     <i class="fas fa-exchange-alt"></i> Tukar
                 </button>
             </div>
         `;
-    container.appendChild(rewardDiv);
-  });
-
-  // Event listener quantity
-  filteredRewards.forEach((reward) => {
-    const minusBtn = document.querySelector(
-      `.qty-minus[data-id="${reward.id}"]`,
-    );
-    const plusBtn = document.querySelector(`.qty-plus[data-id="${reward.id}"]`);
-    const qtySpan = document.getElementById(`qty-${reward.id}`);
-    const totalSpan = document.getElementById(`total-${reward.id}`);
-
-    if (minusBtn) {
-      minusBtn.addEventListener("click", () => {
-        let currentQty = parseInt(qtySpan.innerText);
-        if (currentQty > 1) {
-          currentQty--;
-          qtySpan.innerText = currentQty;
-          totalSpan.innerText = (reward.points * currentQty).toLocaleString();
-        }
-      });
-    }
-
-    if (plusBtn) {
-      plusBtn.addEventListener("click", () => {
-        let currentQty = parseInt(qtySpan.innerText);
-        if (currentQty < reward.stock) {
-          currentQty++;
-          qtySpan.innerText = currentQty;
-          totalSpan.innerText = (reward.points * currentQty).toLocaleString();
-        } else {
-          showNotification(
-            `⚠️ Stok tidak mencukupi! Maksimal ${reward.stock} item.`,
-            "error",
-          );
-        }
-      });
-    }
-  });
-
-  // Event listener tukar
-  document.querySelectorAll(".exchange-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const id = parseInt(btn.dataset.id);
-      const reward = rewardsData.find((r) => r.id === id);
-      const qtySpan = document.getElementById(`qty-${reward.id}`);
-      const quantity = parseInt(qtySpan.innerText);
-
-      if (reward && reward.stock >= quantity) {
-        const totalPointsNeeded = reward.points * quantity;
-
-        if (totalPoin >= totalPointsNeeded) {
-          selectedReward = reward;
-          selectedQuantity = quantity;
-
-          document.getElementById("confirmMessage").innerHTML = `
-                        Anda akan menukarkan <strong>${quantity}x ${reward.name}</strong><br>
-                        Total poin yang dibutuhkan: <strong style="color:#e9c46a;">${totalPointsNeeded.toLocaleString()} poin</strong><br>
-                        Stok setelah ditukar: <strong>${reward.stock - quantity}</strong>
-                    `;
-          document.getElementById("confirmModal").style.display = "block";
-          document.body.style.overflow = "hidden";
-        } else {
-          showNotification(
-            `❌ Poin tidak mencukupi! Butuh ${totalPointsNeeded.toLocaleString()} poin, Anda memiliki ${totalPoin.toLocaleString()} poin.`,
-            "error",
-          );
-        }
-      } else {
-        showNotification(
-          `❌ Stok tidak mencukupi! Tersedia ${reward.stock} item.`,
-          "error",
-        );
-      }
+        container.appendChild(rewardDiv);
     });
-  });
+
+
+    filteredRewards.forEach((reward) => {
+        const stock = Number(reward.stock) || 0;
+        const points = Number(reward.points) || 0;
+        
+        const minusBtn = document.querySelector(`.qty-minus[data-id="${reward.id}"]`);
+        const plusBtn = document.querySelector(`.qty-plus[data-id="${reward.id}"]`);
+        const qtySpan = document.getElementById(`qty-${reward.id}`);
+        const totalSpan = document.getElementById(`total-${reward.id}`);
+
+        if (minusBtn) {
+            minusBtn.addEventListener("click", () => {
+                let currentQty = parseInt(qtySpan.innerText);
+                if (currentQty > 1) {
+                    currentQty--;
+                    qtySpan.innerText = currentQty;
+                    totalSpan.innerText = (points * currentQty).toLocaleString();
+                }
+            });
+        }
+
+        if (plusBtn) {
+            plusBtn.addEventListener("click", () => {
+                let currentQty = parseInt(qtySpan.innerText);
+                if (currentQty < stock) {
+                    currentQty++;
+                    qtySpan.innerText = currentQty;
+                    totalSpan.innerText = (points * currentQty).toLocaleString();
+                } else {
+                    if (stock <= 0) {
+                        showNotification(`⚠️ Stok reward habis!`, "error");
+                    } else {
+                        showNotification(`⚠️ Stok maksimal ${stock} item!`, "error");
+                    }
+                }
+            });
+        }
+    });
+
+    const exchangeBtns = document.querySelectorAll(".exchange-btn");
+    exchangeBtns.forEach((btn) => {
+        btn.removeEventListener("click", handleExchangeClick);
+        btn.addEventListener("click", handleExchangeClick);
+    });
 }
 
-function processExchange() {
-  if (selectedReward && selectedQuantity) {
-    const totalPointsNeeded = selectedReward.points * selectedQuantity;
+function handleExchangeClick(e) {
+    const btn = e.currentTarget;
+    const id = Number(btn.dataset.id);
+    const reward = formattedRewards.find((r) => r.id === id);
 
-    totalPoin -= totalPointsNeeded;
-
-    const rewardIndex = rewardsData.findIndex(
-      (r) => r.id === selectedReward.id,
-    );
-    if (rewardIndex !== -1) {
-      rewardsData[rewardIndex].stock -= selectedQuantity;
+    if (!reward) {
+        showNotification("Reward tidak ditemukan!", "error");
+        return;
     }
 
-    const now = new Date();
-    const tanggalString =
-      now.toLocaleDateString("id-ID", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }) +
-      ", " +
-      now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+    const qtySpan = document.getElementById(`qty-${reward.id}`);
+    const quantity = parseInt(qtySpan.innerText);
+    
+    if (reward.stock <= 0) {
+        showNotification(`❌ Stok reward habis!`, "error");
+        return;
+    }
+    
+    if (reward.stock < quantity) {
+        showNotification(`❌ Stok tidak mencukupi! Tersedia ${reward.stock} item.`, "error");
+        return;
+    }
 
-    const newId = userExchangeHistory.length + 1;
-    userExchangeHistory.unshift({
-      id: newId,
-      tanggal: tanggalString,
-      reward: selectedReward.name,
-      jumlah: selectedQuantity,
-      totalPoin: totalPointsNeeded,
-      status: "pending",
-    });
+    const totalPointsNeeded = reward.points * quantity;
 
-    saveData();
-    updatePoinDisplay();
-    renderRewards();
-    renderUserExchangeHistory();
+    if (totalPoin >= totalPointsNeeded) {
+        selectedReward = reward;
+        selectedQuantity = quantity;
+        
+        const confirmMessage = document.getElementById("confirmMessage");
+        if (confirmMessage) {
+            confirmMessage.innerHTML = `
+                Anda akan menukarkan <strong>${quantity}x ${reward.name}</strong><br>
+                Total poin yang dibutuhkan: <strong style="color:#e9c46a;">${totalPointsNeeded.toLocaleString()} poin</strong><br>
+                Stok setelah ditukar: <strong>${reward.stock - quantity}</strong>
+            `;
+        }
+        
+        const modal = document.getElementById("confirmModal");
+        if (modal) {
+            modal.style.display = "block";
+            document.body.style.overflow = "hidden";
+        }
+    } else {
+        showNotification(`❌ Poin tidak mencukupi! Butuh ${totalPointsNeeded.toLocaleString()} poin, Anda memiliki ${totalPoin.toLocaleString()} poin.`, "error");
+    }
+}
 
-    showNotification(
-      `🎉 Permintaan penukaran ${selectedQuantity}x ${selectedReward.name} berhasil! Menunggu verifikasi admin.`,
-      "success",
-    );
+async function processExchange() {
+    if (selectedReward && selectedQuantity) {
+        const totalPointsNeeded = selectedReward.points * selectedQuantity;
 
-    closeConfirmModal();
+        const confirmBtn = document.getElementById("confirmExchangeBtn");
+        const originalText = confirmBtn.innerHTML;
+        confirmBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+        confirmBtn.disabled = true;
 
-    selectedReward = null;
-    selectedQuantity = 1;
-  }
+        try {
+            const response = await fetch("/api/exchange-reward", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN":
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute("content") || "",
+                },
+                body: JSON.stringify({
+                    reward_id: selectedReward.id,
+                    quantity: selectedQuantity,
+                    total_points: totalPointsNeeded,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                totalPoin = data.remaining_poin;
+                updatePoinDisplay();
+
+                const rewardIndex = formattedRewards.findIndex(
+                    (r) => r.id === selectedReward.id,
+                );
+                if (rewardIndex !== -1) {
+                    formattedRewards[rewardIndex].stock = data.reward_stock;
+                }
+
+                await fetchExchangeHistory();
+                renderRewards();
+
+                showNotification(
+                    `🎉 Permintaan penukaran ${selectedQuantity}x ${selectedReward.name} berhasil! Menunggu verifikasi admin.`,
+                    "success",
+                );
+                closeConfirmModal();
+            } else {
+                showNotification(`❌ ${data.message}`, "error");
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            showNotification(
+                "❌ Terjadi kesalahan, silakan coba lagi!",
+                "error",
+            );
+        } finally {
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.disabled = false;
+        }
+
+        selectedReward = null;
+        selectedQuantity = 1;
+    }
 }
 
 function closeConfirmModal() {
-  document.getElementById("confirmModal").style.display = "none";
-  document.body.style.overflow = "";
+    const modal = document.getElementById("confirmModal");
+    if (modal) {
+        modal.style.display = "none";
+        document.body.style.overflow = "";
+    }
 }
-
-// Navigasi
 const navToggle = document.getElementById("navToggle");
 const navigation = document.getElementById("navigation");
 const overlay = document.getElementById("overlay");
 
 function toggleNav() {
-  navToggle.classList.toggle("active");
-  navigation.classList.toggle("active");
-  overlay.classList.toggle("active");
+    if (navToggle) navToggle.classList.toggle("active");
+    if (navigation) navigation.classList.toggle("active");
+    if (overlay) overlay.classList.toggle("active");
 }
 
 function initEventListeners() {
-  navToggle.addEventListener("click", toggleNav);
-  overlay.addEventListener("click", toggleNav);
+    if (navToggle) navToggle.addEventListener("click", toggleNav);
+    if (overlay) overlay.addEventListener("click", toggleNav);
 
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      showNotification(
-        "🚪 Anda telah logout dari Dompet Sadhar. Sampai jumpa kembali! 🌱",
-        "info",
-      );
+    // Filter kategori
+    const categoryBtns = document.querySelectorAll(".category-btn");
+    categoryBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            categoryBtns.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            const btnCategory = btn.dataset.category;
+            if (btnCategory === "food") {
+                currentCategoryFilter = "makanan";
+            } else if (btnCategory === "drink") {
+                currentCategoryFilter = "minuman";
+            } else if (btnCategory === "goods") {
+                currentCategoryFilter = "barang";
+            } else {
+                currentCategoryFilter = "all";
+            }
+
+            renderRewards();
+        });
     });
-  }
 
-  // Filter kategori
-  const categoryBtns = document.querySelectorAll(".category-btn");
-  categoryBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      categoryBtns.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentCategoryFilter = btn.dataset.category;
-      renderRewards();
+    // Filter status riwayat
+    const filterBtns = document.querySelectorAll(".status-filter-btn");
+    filterBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            filterBtns.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            currentHistoryFilter = btn.dataset.filter;
+            renderUserExchangeHistory();
+        });
     });
-  });
 
-  // Filter status
-  const filterBtns = document.querySelectorAll(".status-filter-btn");
-  filterBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      filterBtns.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentHistoryFilter = btn.dataset.filter;
-      renderUserExchangeHistory();
+    // Tombol Lihat Semua Riwayat
+    const lihatSemuaBtn = document.getElementById("lihatSemuaHistoryBtn");
+    if (lihatSemuaBtn) {
+        lihatSemuaBtn.addEventListener("click", openFullHistoryModal);
+    }
+
+    const closeFullHistoryBtn = document.getElementById(
+        "closeFullHistoryModal",
+    );
+    if (closeFullHistoryBtn) {
+        closeFullHistoryBtn.addEventListener("click", closeFullHistoryModal);
+    }
+
+    const modalClose = document.querySelector("#confirmModal .modal-close");
+    const cancelConfirmBtn = document.getElementById("cancelConfirmBtn");
+    const confirmExchangeBtn = document.getElementById("confirmExchangeBtn");
+
+    if (modalClose) modalClose.addEventListener("click", closeConfirmModal);
+    if (cancelConfirmBtn)
+        cancelConfirmBtn.addEventListener("click", closeConfirmModal);
+    if (confirmExchangeBtn)
+        confirmExchangeBtn.addEventListener("click", processExchange);
+
+    // Tutup modal saat klik di luar
+    window.addEventListener("click", (e) => {
+        const confirmModal = document.getElementById("confirmModal");
+        if (e.target === confirmModal) closeConfirmModal();
+
+        const fullHistoryModal = document.getElementById("fullHistoryModal");
+        if (e.target === fullHistoryModal) closeFullHistoryModal();
     });
-  });
-
-  // Modal events
-  const modalClose = document.querySelector(".modal-close");
-  const cancelConfirmBtn = document.getElementById("cancelConfirmBtn");
-  const confirmExchangeBtn = document.getElementById("confirmExchangeBtn");
-
-  if (modalClose) modalClose.addEventListener("click", closeConfirmModal);
-  if (cancelConfirmBtn)
-    cancelConfirmBtn.addEventListener("click", closeConfirmModal);
-  if (confirmExchangeBtn)
-    confirmExchangeBtn.addEventListener("click", processExchange);
-
-  window.addEventListener("click", (e) => {
-    const modal = document.getElementById("confirmModal");
-    if (e.target === modal) closeConfirmModal();
-  });
 }
 
-function init() {
-  loadData();
-  renderRewards();
-  renderUserExchangeHistory();
-  initEventListeners();
+async function init() {
+    updatePoinDisplay();
+
+    if (window.rewardsData && window.rewardsData.length > 0) {
+        rewardsData = window.rewardsData;
+        formatRewards();
+        renderRewards();
+    } else {
+        await fetchRewardsFromServer();
+    }
+
+    await fetchExchangeHistory();
+    initEventListeners();
 }
 
 document.addEventListener("DOMContentLoaded", init);

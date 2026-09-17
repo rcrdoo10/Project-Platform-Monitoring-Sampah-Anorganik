@@ -150,7 +150,7 @@
     flex-wrap: wrap;
 }
 
-/* Tabel riwayat */
+/* Tabel riwayat - TANPA AKSI & DI TENGAH */
 .recent-section {
     background: #ffffff;
     border-radius: 32px;
@@ -211,19 +211,23 @@ table {
 }
 
 th {
-    text-align: left;
-    padding: 14px 10px 12px 0;
+    text-align: center;
+    padding: 14px 12px;
     color: #5f7c8b;
     font-weight: 600;
-    border-bottom: 1px solid #e9edf2;
+    border-bottom: 2px solid #e9edf2;
+    background-color: #f8fafc;
 }
 
 td {
-    padding: 14px 10px 14px 0;
+    text-align: center;
+    padding: 14px 12px;
     border-bottom: 1px solid #e9edf2;
     vertical-align: middle;
     color: #1e2f3a;
 }
+
+/* HAPUS KOLOM AKSI - Tidak perlu CSS tambahan, cukup di JS */
 
 .status-badge {
     background: #dff0e6;
@@ -233,18 +237,6 @@ td {
     font-size: 0.7rem;
     font-weight: 600;
     display: inline-block;
-}
-
-.detail-link {
-    color: #3c9e7a;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.75rem;
-    cursor: pointer;
-}
-
-.detail-link:hover {
-    text-decoration: underline;
 }
 
 /* Modal Riwayat Lengkap */
@@ -297,6 +289,12 @@ td {
     padding: 24px 28px 32px;
     max-height: 500px;
     overflow-y: auto;
+}
+
+/* Tabel di Modal juga di tengah */
+.full-history-body th,
+.full-history-body td {
+    text-align: center;
 }
 
 @keyframes modalSlideIn {
@@ -398,5 +396,9 @@ td {
     }
     .full-history-content {
         margin: 20px;
+    }
+    th, td {
+        padding: 10px 8px;
+        font-size: 0.75rem;
     }
 }

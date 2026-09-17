@@ -1,16 +1,8 @@
-// ============================================
-// laporan.js - JavaScript untuk halaman laporan
-// ============================================
-
 let currentPeriod = "weekly";
 let mainChart = null;
 
-// Data sudah ada dari server, tidak perlu fetch lagi untuk statistik
 console.log("Data from server:", window.initialData);
 
-// ============================================
-// Ambil data chart dari server (untuk grafik)
-// ============================================
 async function fetchChartData(period) {
     try {
         const response = await fetch(`/api/laporan/chart?period=${period}`);
@@ -28,9 +20,6 @@ async function fetchChartData(period) {
     }
 }
 
-// ============================================
-// Update chart
-// ============================================
 function updateChart(labels, botolData, beratData) {
     if (mainChart) {
         mainChart.data.labels = labels;
@@ -42,9 +31,6 @@ function updateChart(labels, botolData, beratData) {
     }
 }
 
-// ============================================
-// Create chart
-// ============================================
 function createChart(labels, botolData, beratData) {
     const ctx = document.getElementById("wasteChart");
     if (!ctx) return;
@@ -112,9 +98,6 @@ function createChart(labels, botolData, beratData) {
     });
 }
 
-// ============================================
-// Download laporan
-// ============================================
 async function downloadReport() {
     const reportSection = document.getElementById("reportSection");
     if (!reportSection) return;
@@ -157,9 +140,6 @@ async function downloadReport() {
     }
 }
 
-// ============================================
-// Notifikasi
-// ============================================
 function showNotification(message, type = "success") {
     const notification = document.createElement("div");
     notification.className = `notification notification-${type}`;
@@ -172,9 +152,6 @@ function showNotification(message, type = "success") {
     }, 4000);
 }
 
-// ============================================
-// Navbar
-// ============================================
 const navToggle = document.getElementById("navToggle");
 const navigation = document.getElementById("navigation");
 const overlay = document.getElementById("overlay");
@@ -185,9 +162,6 @@ function toggleNav() {
     if (overlay) overlay.classList.toggle("active");
 }
 
-// ============================================
-// Event listeners
-// ============================================
 function initEventListeners() {
     if (navToggle) navToggle.addEventListener("click", toggleNav);
     if (overlay) overlay.addEventListener("click", toggleNav);
@@ -208,20 +182,13 @@ function initEventListeners() {
     }
 }
 
-// ============================================
-// Logout
-// ============================================
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
-        // Redirect ke logout
         window.location.href = "/logout";
     });
 }
 
-// ============================================
-// Inisialisasi
-// ============================================
 async function init() {
     await fetchChartData("weekly");
     initEventListeners();
