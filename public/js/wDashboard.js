@@ -10,13 +10,17 @@ function updateDashboardNumbers() {
     const beratElement = document.getElementById("totalBeratVal");
 
     if (poinElement) {
-        poinElement.innerText = totalPoin.toLocaleString("id-ID");
+        poinElement.innerText = Number(totalPoin).toLocaleString("id-ID");
     }
     if (botolElement) {
-        botolElement.innerText = totalBotol.toLocaleString("id-ID");
+        botolElement.innerText = Number(totalBotol).toLocaleString("id-ID");
     }
     if (beratElement) {
-        beratElement.innerText = totalBerat.toLocaleString("id-ID");
+        beratElement.innerText =
+            Number(totalBerat).toLocaleString("id-ID", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
     }
 }
 
@@ -246,7 +250,10 @@ function renderHistoryTable() {
 
     recentData.forEach((item) => {
         const row = tbody.insertRow();
-        row.insertCell(0).innerText = item.tanggal;
+        row.insertCell(0).innerHTML = `
+            <div>${item.tanggal}</div>
+            <small style="color:#999;">${item.jam || "00:00"}</small>
+        `;
         row.insertCell(1).innerText = item.botol;
         row.insertCell(2).innerText = item.berat;
         row.insertCell(3).innerHTML =

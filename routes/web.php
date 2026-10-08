@@ -46,9 +46,14 @@ Route::prefix('api')->group(function () {
     Route::get('/reward/stok', [rewardController::class, 'getTotalStok']);
     Route::post('/exchange-reward', [rewardController::class, 'exchangeReward']);
     Route::get('/user/exchange-history', [rewardController::class, 'getUserExchangeHistory']);
+
+    // ========== CRUD REWARD (upload gambar) ==========
     Route::post('/rewards', [rewardController::class, 'store']);
     Route::put('/rewards/{id}', [rewardController::class, 'update']);
+    Route::post('/rewards/{id}', [rewardController::class, 'update']);   // ✅ untuk FormData (update dengan file)
     Route::delete('/rewards/{id}', [rewardController::class, 'destroy']);
+
+    // ========== TRANSAKSI ==========
     Route::get('/transaksi/pending', [transaksiController::class, 'getPending']);
     Route::get('/transaksi/approved', [transaksiController::class, 'getApproved']);
     Route::get('/transaksi/all', [transaksiController::class, 'getAll']);

@@ -9,7 +9,7 @@
     <div class="header-flex">
         <div class="greeting">
             <h1><i class="fas fa-gift" style="color:#2e7d64;"></i> Kelola Reward</h1>
-            <p>Kelola daftar reward, kategori, harga (poin), dan stok reward</p>
+            <p>Kelola daftar reward, kategori, harga (poin), stok, dan gambar reward</p>
         </div>
         <form method="POST" action="{{ route('logout') }}" style="display: inline;">
             @csrf
@@ -36,11 +36,12 @@
     </div>
 
     <div class="motivation-footer">
-        <div><i class="fas fa-edit"></i> Klik tombol Edit untuk mengubah kategori, harga (poin) dan jumlah stok reward.</div>
+        <div><i class="fas fa-edit"></i> Klik tombol Edit untuk mengubah gambar, kategori, poin, dan stok reward.</div>
         <div><i class="fas fa-hand-holding-heart"></i> #dompetSadhar</div>
     </div>
 </main>
 
+<!-- ========== MODAL EDIT REWARD ========== -->
 <div id="editRewardModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -48,16 +49,19 @@
             <span class="modal-close">&times;</span>
         </div>
         <div class="modal-body">
-            <form id="editRewardForm">
+            <form id="editRewardForm" enctype="multipart/form-data">
                 <input type="hidden" id="editRewardId">
+
                 <div class="form-group">
                     <label>Nama Reward</label>
                     <input type="text" id="editRewardName" required>
                 </div>
+
                 <div class="form-group">
                     <label>Deskripsi</label>
                     <input type="text" id="editRewardDesc" placeholder="Deskripsi reward">
                 </div>
+
                 <div class="form-group">
                     <label>Jenis Reward</label>
                     <select id="editRewardCategory">
@@ -66,6 +70,7 @@
                         <option value="Barang">🎁 Barang</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label>Satuan</label>
                     <select id="editRewardSatuan">
@@ -73,14 +78,28 @@
                         <option value="lusin">Lusin (12 pcs)</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label>Harga (Poin yang dibutuhkan)</label>
                     <input type="number" id="editRewardPoints" min="0" required>
                 </div>
+
                 <div class="form-group">
                     <label>Jumlah Stok Reward</label>
                     <input type="number" id="editRewardStock" min="0" step="1" required>
                 </div>
+
+                <div class="form-group">
+                    <label>Gambar Reward</label>
+                    <input type="file" id="editRewardImage" accept="image/*">
+                    <small style="color:#999;">Biarkan kosong kalau tidak mau ganti gambar. Maks 2MB.</small>
+                </div>
+
+                <div id="editImagePreviewWrap" style="display:none; margin-top: 10px;">
+                    <img id="editImagePreview" src="" alt="Preview"
+                         style="max-width: 200px; border-radius: 12px; border: 1px solid #e9edf2;">
+                </div>
+
                 <div class="modal-buttons">
                     <button type="button" class="btn-cancel" id="cancelEditBtn">Batal</button>
                     <button type="submit" class="btn-save">Simpan Perubahan</button>
@@ -90,6 +109,7 @@
     </div>
 </div>
 
+<!-- ========== MODAL TAMBAH REWARD ========== -->
 <div id="addRewardModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -97,15 +117,17 @@
             <span class="modal-close-add">&times;</span>
         </div>
         <div class="modal-body">
-            <form id="addRewardForm">
+            <form id="addRewardForm" enctype="multipart/form-data">
                 <div class="form-group">
                     <label>Nama Reward</label>
                     <input type="text" id="addRewardName" placeholder="Contoh: Paket Nasi Box" required>
                 </div>
+
                 <div class="form-group">
                     <label>Deskripsi</label>
                     <input type="text" id="addRewardDesc" placeholder="Deskripsi reward">
                 </div>
+
                 <div class="form-group">
                     <label>Jenis Reward</label>
                     <select id="addRewardCategory">
@@ -114,6 +136,7 @@
                         <option value="Barang">🎁 Barang</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label>Satuan</label>
                     <select id="addRewardSatuan">
@@ -121,14 +144,28 @@
                         <option value="lusin">Lusin (12 pcs)</option>
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label>Harga (Poin yang dibutuhkan)</label>
                     <input type="number" id="addRewardPoints" min="0" value="500" required>
                 </div>
+
                 <div class="form-group">
                     <label>Jumlah Stok Reward</label>
                     <input type="number" id="addRewardStock" min="0" step="1" value="10" required>
                 </div>
+
+                <div class="form-group">
+                    <label>Gambar Reward</label>
+                    <input type="file" id="addRewardImage" accept="image/*">
+                    <small style="color:#999;">Format: JPG, PNG, GIF, WEBP. Maks 2MB.</small>
+                </div>
+
+                <div id="addImagePreviewWrap" style="display:none; margin-top: 10px;">
+                    <img id="addImagePreview" src="" alt="Preview"
+                         style="max-width: 200px; border-radius: 12px; border: 1px solid #e9edf2;">
+                </div>
+
                 <div class="modal-buttons">
                     <button type="button" class="btn-cancel" id="cancelAddBtn">Batal</button>
                     <button type="submit" class="btn-save">Tambah Reward</button>

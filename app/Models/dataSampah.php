@@ -8,28 +8,21 @@ class dataSampah extends Model
 {
     protected $table = 'data_sampah';
     protected $primaryKey = 'id_sampah';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    public $incrementing = true;
+    protected $keyType = 'int';
     public $timestamps = false;
-    
+
     protected $fillable = [
         'id_sampah',
         'berat_botol',
-        'jumlah_botol',
+        'total_botol',
         'poin_dapat',
         'waktu_scan',
-        'jam_scan',
         'status_scan',
-        'id_user'
     ];
-    
-    public function user()
+
+    public function mencatats()
     {
-        return $this->belongsTo(akun::class, 'id_user', 'id_user');
-    }
-    
-    public function akunSampah()
-    {
-        return $this->hasMany(akunSampah::class, 'id_sampah', 'id_sampah');
+        return $this->hasMany(mencatat::class, 'id_sampah', 'id_sampah');
     }
 }

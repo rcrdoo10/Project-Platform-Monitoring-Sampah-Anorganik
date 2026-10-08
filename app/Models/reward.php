@@ -17,21 +17,13 @@ class reward extends Model
         'jenis_reward',
         'stok',
         'poin_dibutuhkan',
-        'gambar_reward',
+        'gambar_reward',        // ✅ WAJIB ADA
         'deskripsi',
-        'kategori'
+        'kategori',
     ];
 
-    // Relasi ke transaksi melalui transaksiReward
-    public function transaksis()
+    public function menukarkans()
     {
-        return $this->belongsToMany(transaksi::class, 'transaksi_reward', 'id_reward', 'id_transaksi')
-                    ->withPivot('jumlah_reward');
-    }
-    
-    // Relasi ke transaksiReward
-    public function transaksiRewards()
-    {
-        return $this->hasMany(transaksiReward::class, 'id_reward', 'id_reward');
+        return $this->hasMany(menukarkan::class, 'id_reward', 'id_reward');
     }
 }

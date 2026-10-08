@@ -15,11 +15,10 @@ class transaksi extends Model
     protected $fillable = [
         'id_transaksi',
         'poin_transaksi',
-        'jumlah_transaksi',
         'tanggal_transaksi',
-        'jam_transaksi',
+        'jam_transaksi',          // ✅ tambah
         'status_transaksi',
-        'id_user'
+        'id_user',
     ];
 
     public function user()
@@ -27,14 +26,18 @@ class transaksi extends Model
         return $this->belongsTo(akun::class, 'id_user', 'id_user');
     }
 
+    public function menukarkans()
+    {
+        return $this->hasMany(menukarkan::class, 'id_transaksi', 'id_transaksi');
+    }
+
     public function rewards()
     {
-        return $this->belongsToMany(reward::class, 'transaksi_reward', 'id_transaksi', 'id_reward')
-                    ->withPivot('jumlah_reward');
-    }
-    
-    public function transaksiRewards()
-    {
-        return $this->hasMany(transaksiReward::class, 'id_transaksi', 'id_transaksi');
+        return $this->belongsToMany(
+            reward::class,
+            'menukarkan',
+            'id_transaksi',
+            'id_reward'
+        )->withPivot('jumlah_reward');
     }
 }

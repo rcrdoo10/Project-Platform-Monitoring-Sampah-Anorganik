@@ -7,7 +7,6 @@
 @section('content')
 
 <script>
-    // Data dari route
     window.initialData = {
         user_nama: "{{ $user_nama }}",
         user_poin: {{ $user_poin }},
@@ -52,7 +51,7 @@
                 <span>Total Berat</span>
                 <i class="fas fa-weight-hanging" style="color:#e9c46a;"></i>
             </div>
-            <div class="stat-value" id="totalBeratVal">{{ number_format($totalBerat, 0, ',', '.') }} kg</div>
+            <div class="stat-value" id="totalBeratVal">{{ number_format((float)$totalBerat, 2, ',', '.') }} kg</div>
             <div class="stat-sub"><i class="fas fa-chart-line"></i> Total berat yang discan</div>
         </div>
     </div>

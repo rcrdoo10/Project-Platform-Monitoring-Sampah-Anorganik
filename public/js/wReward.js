@@ -91,6 +91,7 @@ async function fetchExchangeHistory() {
             userExchangeHistory = data.data.map((item) => ({
                 id: item.id,
                 tanggal: item.tanggal,
+                jam: item.jam,
                 reward: item.reward,
                 jumlah: item.jumlah,
                 totalPoin: item.total_poin,
@@ -120,6 +121,7 @@ async function fetchAllHistoryReward() {
             fullHistoryData = data.data.map((item) => ({
                 id: item.id,
                 tanggal: item.tanggal,
+                jam: item.jam,
                 reward: item.reward,
                 jumlah: item.jumlah,
                 totalPoin: item.total_poin,
@@ -183,7 +185,10 @@ function renderFullHistoryModal() {
 
         html += `
             <tr style="border-bottom: 1px solid #e9edf2;">
-                <td style="padding: 12px;">${item.tanggal}</td>
+                <td style="padding: 12px;">
+                    <div>${item.tanggal}</div>
+                    <small style="color:#999;">${item.jam || "00:00"}</small>
+                </td>
                 <td style="padding: 12px;"><strong style="color:#2e7d64;">${item.reward}</strong></td>
                 <td style="padding: 12px; text-align: center;">${item.jumlah} x</td>
                 <td style="padding: 12px; text-align: center;"><span style="color:#e9c46a; font-weight:600;">${item.totalPoin.toLocaleString()} poin</span></td>
@@ -252,7 +257,10 @@ function renderUserExchangeHistory() {
 
     filteredData.forEach((item) => {
         const row = tbody.insertRow();
-        row.insertCell(0).innerText = item.tanggal;
+        row.insertCell(0).innerHTML = `
+            <div>${item.tanggal}</div>
+            <small style="color:#999;">${item.jam || "00:00"}</small>
+        `;
         row.insertCell(1).innerHTML =
             `<strong style="color:#2e7d64;">${item.reward}</strong>`;
         row.insertCell(2).innerHTML = `${item.jumlah} x`;
