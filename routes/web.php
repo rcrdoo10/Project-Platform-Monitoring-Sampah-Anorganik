@@ -41,6 +41,7 @@ Route::prefix('api')->group(function () {
     Route::get('/chart', [grafikLaporanController::class, 'getChartData']);
     Route::get('/laporan/chart', [grafikLaporanController::class, 'getChartData']);
     Route::get('/laporan/stats', [grafikLaporanController::class, 'getStats']);
+    Route::get('/laporan/export-docx', [grafikLaporanController::class, 'exportDocx'])->name('laporan.export.docx');
     Route::get('/warga/chart-stats', [poinController::class, 'getChartStats']);
     Route::get('/reward/all', [rewardController::class, 'getAllRewards']);
     Route::get('/reward/stok', [rewardController::class, 'getTotalStok']);

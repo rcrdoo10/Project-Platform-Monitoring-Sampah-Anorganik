@@ -3,6 +3,9 @@ let mainChart = null;
 
 console.log("Data from server:", window.initialData);
 
+/* =====================================================
+   FETCH DATA GRAFIK
+   ===================================================== */
 async function fetchChartData(period) {
     try {
         const response = await fetch(`/api/laporan/chart?period=${period}`);
@@ -10,6 +13,7 @@ async function fetchChartData(period) {
 
         if (data.success) {
             updateChart(data.labels, data.botol_data, data.berat_data);
+
             const periodLabel = document.getElementById("periodLabel");
             if (periodLabel) {
                 periodLabel.innerText = `Periode: ${data.period_label}`;
@@ -17,6 +21,7 @@ async function fetchChartData(period) {
         }
     } catch (error) {
         console.error("Error fetching chart data:", error);
+        showNotification("Gagal memuat data grafik", "error");
     }
 }
 
@@ -98,52 +103,45 @@ function createChart(labels, botolData, beratData) {
     });
 }
 
-async function downloadReport() {
-    const reportSection = document.getElementById("reportSection");
-    if (!reportSection) return;
+/* =====================================================
+   UNDUH LAPORAN (.docx)
+   - Ganti metode html2canvas → endpoint /laporan/export-docx
+   - Server generate file Word dari template + data DB
+   ===================================================== */
+function downloadReport() {
+    const startDate = document.getElementById("startDate")?.value || "";
+    const endDate = document.getElementById("endDate")?.value || "";
 
-    const originalBoxShadow = reportSection.style.boxShadow;
-    const originalBorder = reportSection.style.border;
+    const params = new URLSearchParams({
+        period: currentPeriod,
+        start_date: startDate,
+        end_date: endDate,
+    });
 
-    reportSection.style.boxShadow = "none";
-    reportSection.style.border = "1px solid #e9edf2";
+    showNotification("📄 Menyiapkan laporan Word...", "info");
 
-    showNotification("📄 Sedang menyiapkan laporan...", "info");
+    // Trigger download via server (browser akan download otomatis dari response)
+    window.location.href = `/api/laporan/export-docx?${params}`;
 
-    try {
-        const canvas = await html2canvas(reportSection, {
-            scale: 2,
-            backgroundColor: "#ffffff",
-            logging: false,
-            useCORS: true,
-        });
-
-        const link = document.createElement("a");
-        const period =
-            currentPeriod === "weekly"
-                ? "Mingguan"
-                : currentPeriod === "monthly"
-                  ? "Bulanan"
-                  : "Tahunan";
-        const date = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
-        link.download = `Laporan_Sampah_${period}_${date}.png`;
-        link.href = canvas.toDataURL();
-        link.click();
-
-        showNotification("✅ Laporan berhasil diunduh!", "success");
-    } catch (error) {
-        console.error("Error:", error);
-        showNotification("❌ Gagal mengunduh laporan", "error");
-    } finally {
-        reportSection.style.boxShadow = originalBoxShadow;
-        reportSection.style.border = originalBorder;
-    }
+    // Notifikasi sukses (delay dikit biar kelihatan progres)
+    setTimeout(() => {
+        showNotification("✅ File laporan sedang diunduh", "success");
+    }, 800);
 }
 
+/* =====================================================
+   NOTIFIKASI
+   ===================================================== */
 function showNotification(message, type = "success") {
     const notification = document.createElement("div");
     notification.className = `notification notification-${type}`;
-    notification.innerHTML = `<i class="fas ${type === "success" ? "fa-check-circle" : type === "error" ? "fa-exclamation-circle" : "fa-info-circle"}"></i><span>${message}</span>`;
+    notification.innerHTML = `<i class="fas ${
+        type === "success"
+            ? "fa-check-circle"
+            : type === "error"
+              ? "fa-exclamation-circle"
+              : "fa-info-circle"
+    }"></i><span>${message}</span>`;
     document.body.appendChild(notification);
 
     setTimeout(() => {
@@ -152,6 +150,9 @@ function showNotification(message, type = "success") {
     }, 4000);
 }
 
+/* =====================================================
+   NAVIGASI
+   ===================================================== */
 const navToggle = document.getElementById("navToggle");
 const navigation = document.getElementById("navigation");
 const overlay = document.getElementById("overlay");
@@ -162,10 +163,14 @@ function toggleNav() {
     if (overlay) overlay.classList.toggle("active");
 }
 
+/* =====================================================
+   EVENT LISTENERS
+   ===================================================== */
 function initEventListeners() {
     if (navToggle) navToggle.addEventListener("click", toggleNav);
     if (overlay) overlay.addEventListener("click", toggleNav);
 
+    // Filter periode (weekly / monthly / yearly)
     const filterBtns = document.querySelectorAll(".filter-btn");
     filterBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -176,12 +181,16 @@ function initEventListeners() {
         });
     });
 
+    // Tombol unduh laporan
     const downloadBtn = document.getElementById("downloadReportBtn");
     if (downloadBtn) {
         downloadBtn.addEventListener("click", downloadReport);
     }
 }
 
+/* =====================================================
+   LOGOUT
+   ===================================================== */
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
@@ -189,6 +198,9 @@ if (logoutBtn) {
     });
 }
 
+/* =====================================================
+   INIT
+   ===================================================== */
 async function init() {
     await fetchChartData("weekly");
     initEventListeners();
