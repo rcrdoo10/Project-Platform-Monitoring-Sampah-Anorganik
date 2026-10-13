@@ -393,11 +393,11 @@ class grafikLaporanController extends Controller
             case 'daily':
                 return [Carbon::today(), Carbon::today()];
             case 'weekly':
-                return [Carbon::now()->subWeeks(4)->startOfWeek(), Carbon::now()->endOfWeek()];
+                return [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()];
             case 'monthly':
-                return [Carbon::now()->subMonths(12)->startOfMonth(), Carbon::now()->endOfMonth()];
+                return [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()];
             case 'yearly':
-                return [Carbon::now()->subYears(5)->startOfYear(), Carbon::now()->endOfYear()];
+                return [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()];
             default:
                 return [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()];
         }
